@@ -8,8 +8,9 @@ import Indicadores from '@/components/empreendimento/Indicadores';
 import AportesSection from '@/components/empreendimento/AportesSection';
 import ImportacaoSienge from '@/components/empreendimento/ImportacaoSienge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowLeft, Building2, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { gerarPDFEmpreendimento } from '@/lib/gerarPDF';
 
 export default function Empreendimento() {
   const { id } = useParams();
@@ -65,6 +66,23 @@ export default function Empreendimento() {
     ? calcAporteTotalNecessario(contasAPagar, saldoAtual, emp?.margem_aporte_total || 0)
     : 0;
 
+  const handleGerarPDF = () => {
+    gerarPDFEmpreendimento({
+      emp,
+      saldoEmp,
+      semanas: semanasOrdenadas,
+      lancamentos: empLancs,
+      projetos,
+      despesasProjetos,
+      acumulados,
+      contasAPagar,
+      aporteNecessario,
+      participacoes,
+      socios,
+      cicloAtivo
+    });
+  };
+
   if (!emp) {
     return (
       <div className="flex flex-col items-center py-20">
@@ -81,7 +99,7 @@ export default function Empreendimento() {
         <Link to="/">
           <Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <div className="w-10 h-10 bg-foreground rounded flex items-center justify-center">
             <Building2 className="w-5 h-5 text-primary-foreground" />
           </div>
@@ -93,6 +111,10 @@ export default function Empreendimento() {
             </div>
           </div>
         </div>
+        <Button variant="outline" size="sm" onClick={handleGerarPDF} className="gap-2 shrink-0">
+          <FileDown className="w-4 h-4" />
+          Gerar PDF
+        </Button>
       </div>
 
       {/* Indicadores */}

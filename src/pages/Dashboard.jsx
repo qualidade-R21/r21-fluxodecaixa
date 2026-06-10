@@ -4,8 +4,10 @@ import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } fro
 import EmpreendimentoCard from '@/components/dashboard/EmpreendimentoCard';
 import SaldoChart from '@/components/dashboard/SaldoChart';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, FileDown } from 'lucide-react';
 import { useAfacSync } from '@/lib/useAfacSync';
+import { gerarPDFGeral } from '@/lib/gerarPDF';
 import { useSocios, useParticipacoes } from '@/lib/useFluxoData';
 
 export default function Dashboard() {
@@ -99,6 +101,21 @@ export default function Dashboard() {
     return result;
   }, [empData]);
 
+  const handleGerarPDFGeral = () => {
+    gerarPDFGeral({
+      empreendimentos: empAtivos,
+      saldos,
+      semanas: semanasOrdenadas,
+      lancamentos,
+      allProjetos,
+      despesasProjetos,
+      participacoes,
+      socios,
+      cicloAtivo,
+      empData
+    });
+  };
+
   if (!cicloAtivo) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -121,6 +138,10 @@ export default function Dashboard() {
             </span>
           </div>
         </div>
+        <Button variant="outline" size="sm" onClick={handleGerarPDFGeral} className="gap-2">
+          <FileDown className="w-4 h-4" />
+          Gerar PDF Geral
+        </Button>
       </div>
 
       {/* Cards grid */}

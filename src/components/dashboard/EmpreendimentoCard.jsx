@@ -40,18 +40,18 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
             </div>
             <div>
               <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">PROJEÇÃO FINAL</p>
-              <p className={`text-sm font-bold font-heading ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
+              <p className={`font-bold font-heading text-base ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
             <div>
               <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">CONTAS A PAGAR</p>
-              <p className="text-sm font-bold font-heading">{formatBRL(contasAPagar)}</p>
+              <p className="font-bold font-heading text-base">{formatBRL(contasAPagar)}</p>
             </div>
             {showAporte &&
             <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Aporte Nec.</p>
-                <p className={`text-sm font-bold font-heading ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
+                <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">APORTE NEC.</p>
+                <p className={`font-bold font-heading text-base ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
                   {formatBRL(aporteNecessario)}
                 </p>
               </div>

@@ -2,112 +2,102 @@ import jsPDF from 'jspdf';
 import {
   formatBRL,
   calcSaldoSemana,
-  calcSaldosAcumulados,
   calcContasAPagar,
-  calcAporteTotalNecessario,
   calcEqualizacao,
   calcFatorRateio,
   calcAportesPorSemana,
 } from '@/lib/calculos';
 
-// ─────────────────────────────────────────────
-// CONSTANTES
-// ─────────────────────────────────────────────
+// ── A4 landscape em mm: 297 × 210 ──────────────────────────
+const PW = 297;   // page width
+const PH = 210;   // page height
+const ML = 8;     // margin left/right
+const CW = PW - ML * 2; // content width = 281
+const HEADER_H = 18;
+const FOOTER_H = 8;
+const BODY_TOP = HEADER_H + 4;
+const BODY_BOT = PH - FOOTER_H - 2;
+
 const R21_RED = [173, 0, 0];
 const BLACK = [0, 0, 0];
 const WHITE = [255, 255, 255];
-const GRAY_LIGHT = [245, 245, 245];
-const GRAY_MED = [200, 200, 200];
-const GRAY_DARK = [100, 100, 100];
+const GRAY_LIGHT = [247, 247, 247];
+const GRAY_MED = [210, 210, 210];
+const GRAY_DARK = [110, 110, 110];
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
-function now() {
+function nowStr() {
   return new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-function ptToPx(pt) { return pt; } // jsPDF usa pt internamente
-
-function setFont(doc, bold = false, size = 9) {
+function sf(doc, bold, size) {
   doc.setFont('helvetica', bold ? 'bold' : 'normal');
   doc.setFontSize(size);
 }
 
-function rgb(doc, color) {
-  doc.setTextColor(...color);
-}
-
-function fillRgb(doc, color) {
-  doc.setFillColor(...color);
-}
-
-function drawRgb(doc, color) {
-  doc.setDrawColor(...color);
-}
-
-// ─────────────────────────────────────────────
-// CABEÇALHO DE PÁGINA
-// ─────────────────────────────────────────────
+// ── CABEÇALHO ────────────────────────────────────────────────
 function drawHeader(doc, titulo, subtitulo, geradoEm) {
-  const pw = doc.internal.pageSize.getWidth();
-  // Faixa preta
-  fillRgb(doc, BLACK);
-  doc.rect(0, 0, pw, 22, 'F');
+  doc.setFillColor(...BLACK);
+  doc.rect(0, 0, PW, HEADER_H, 'F');
 
-  // Bloco vermelho (logo R21)
-  fillRgb(doc, R21_RED);
-  doc.rect(8, 3, 22, 16, 'F');
-  setFont(doc, true, 12);
-  rgb(doc, WHITE);
-  doc.text('R21', 19, 14, { align: 'center' });
+  // Bloco vermelho R21
+  doc.setFillColor(...R21_RED);
+  doc.rect(ML, 2, 16, 14, 'F');
+  sf(doc, true, 9);
+  doc.setTextColor(...WHITE);
+  doc.text('R21', ML + 8, 10.5, { align: 'center' });
 
   // Título
-  setFont(doc, true, 11);
-  rgb(doc, WHITE);
-  doc.text(titulo, 36, 10);
+  sf(doc, true, 10);
+  doc.setTextColor(...WHITE);
+  doc.text(titulo, ML + 20, 8.5);
 
   // Subtítulo
-  setFont(doc, false, 8);
-  rgb(doc, [200, 200, 200]);
-  doc.text(subtitulo, 36, 17);
+  sf(doc, false, 7);
+  doc.setTextColor(200, 200, 200);
+  doc.text(subtitulo, ML + 20, 14.5);
 
-  // Data/hora de geração
-  setFont(doc, false, 7);
-  rgb(doc, [180, 180, 180]);
-  doc.text(`Gerado em ${geradoEm}`, pw - 8, 14, { align: 'right' });
+  // Data geração
+  sf(doc, false, 6.5);
+  doc.setTextColor(180, 180, 180);
+  doc.text(`Gerado em ${geradoEm}`, PW - ML, 11, { align: 'right' });
 }
 
-// ─────────────────────────────────────────────
-// RODAPÉ DE PÁGINA
-// ─────────────────────────────────────────────
+// ── RODAPÉ (aplicado ao final em todas as páginas) ───────────
 function drawFooter(doc, geradoEm) {
-  const pw = doc.internal.pageSize.getWidth();
-  const ph = doc.internal.pageSize.getHeight();
   const total = doc.internal.getNumberOfPages();
-
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);
-    drawRgb(doc, GRAY_MED);
-    doc.setLineWidth(0.3);
-    doc.line(8, ph - 10, pw - 8, ph - 10);
-    setFont(doc, false, 7);
-    rgb(doc, GRAY_DARK);
-    doc.text('R21 Empreendimentos · Fluxo de Caixa Semanal', 8, ph - 5);
-    doc.text(`${geradoEm}  |  Pág. ${i} / ${total}`, pw - 8, ph - 5, { align: 'right' });
+    doc.setDrawColor(...GRAY_MED);
+    doc.setLineWidth(0.2);
+    doc.line(ML, PH - FOOTER_H, PW - ML, PH - FOOTER_H);
+    sf(doc, false, 6);
+    doc.setTextColor(...GRAY_DARK);
+    doc.text('R21 Empreendimentos · Fluxo de Caixa Semanal', ML, PH - 3);
+    doc.text(`${geradoEm}  |  Pág. ${i} / ${total}`, PW - ML, PH - 3, { align: 'right' });
   }
 }
 
-// ─────────────────────────────────────────────
-// BLOCO DE INDICADORES
-// ─────────────────────────────────────────────
-function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario) {
-  const pw = doc.internal.pageSize.getWidth();
-  setFont(doc, true, 9);
-  rgb(doc, BLACK);
-  doc.text('Indicadores do Ciclo', 8, y);
-  y += 5;
+// ── VERIFICAÇÃO DE QUEBRA DE PÁGINA ──────────────────────────
+function ensureSpace(doc, y, needed) {
+  if (y + needed > BODY_BOT) {
+    doc.addPage();
+    drawHeader(doc, doc.__titulo, doc.__subtitulo, doc.__geradoEm);
+    return BODY_TOP;
+  }
+  return y;
+}
 
+// ── SEÇÃO TÍTULO ─────────────────────────────────────────────
+function drawSectionTitle(doc, y, text) {
+  y = ensureSpace(doc, y, 10);
+  sf(doc, true, 8.5);
+  doc.setTextColor(...BLACK);
+  doc.text(text, ML, y + 3);
+  return y + 7;
+}
+
+// ── BLOCO DE INDICADORES ─────────────────────────────────────
+function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario) {
   const items = [];
   items.push({ label: 'Saldo Atual', value: saldoEmp?.saldo_atual || 0 });
   if (emp.tem_saldo_aplicado) items.push({ label: 'Saldo Aplicado', value: saldoEmp?.saldo_aplicado || 0 });
@@ -119,141 +109,127 @@ function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario) 
     items.push({ label: 'Aporte Total Necessário', value: aporteNecessario, highlight: aporteNecessario > 0 });
   }
 
-  const colW = (pw - 16) / Math.min(items.length, 4);
-  const boxH = 14;
+  const COLS = Math.min(items.length, 5);
+  const BOX_W = CW / COLS;
+  const BOX_H = 12;
 
-  let col = 0;
-  let row = 0;
+  y = ensureSpace(doc, y, BOX_H * Math.ceil(items.length / COLS) + 4);
+
   items.forEach((item, idx) => {
-    col = idx % 4;
-    row = Math.floor(idx / 4);
-    const x = 8 + col * colW;
-    const yy = y + row * (boxH + 2);
+    const col = idx % COLS;
+    const row = Math.floor(idx / COLS);
+    const x = ML + col * BOX_W;
+    const yy = y + row * (BOX_H + 1);
 
-    fillRgb(doc, GRAY_LIGHT);
-    drawRgb(doc, GRAY_MED);
-    doc.setLineWidth(0.2);
-    doc.rect(x, yy, colW - 2, boxH, 'FD');
+    doc.setFillColor(...GRAY_LIGHT);
+    doc.setDrawColor(...GRAY_MED);
+    doc.setLineWidth(0.15);
+    doc.rect(x, yy, BOX_W - 1, BOX_H, 'FD');
 
-    setFont(doc, false, 6.5);
-    rgb(doc, GRAY_DARK);
-    doc.text(item.label.toUpperCase(), x + 2, yy + 4.5);
+    sf(doc, false, 5.5);
+    doc.setTextColor(...GRAY_DARK);
+    doc.text(item.label.toUpperCase(), x + 1.5, yy + 4);
 
-    setFont(doc, true, 8.5);
-    rgb(doc, item.highlight ? R21_RED : (item.value < 0 ? R21_RED : BLACK));
-    doc.text(formatBRL(item.value), x + colW - 4, yy + 10.5, { align: 'right' });
+    sf(doc, true, 8);
+    const isNeg = item.value < 0;
+    doc.setTextColor(...(item.highlight || isNeg ? R21_RED : BLACK));
+    doc.text(formatBRL(item.value), x + BOX_W - 2.5, yy + 9.5, { align: 'right' });
   });
 
-  const rowsUsed = Math.ceil(items.length / 4);
-  return y + rowsUsed * (boxH + 2) + 4;
+  const rowsUsed = Math.ceil(items.length / COLS);
+  return y + rowsUsed * (BOX_H + 1) + 4;
 }
 
-// ─────────────────────────────────────────────
-// TABELA GENÉRICA
-// ─────────────────────────────────────────────
+// ── TABELA GENÉRICA ──────────────────────────────────────────
+// colWidths: array de larguras em mm (deve somar CW)
+// cells: cada valor pode ser: number | string | { value: string, red: boolean }
 function drawTable(doc, y, headers, rows, colWidths, opts = {}) {
-  const { zebra = true, boldLastRow = false } = opts;
-  const pw = doc.internal.pageSize.getWidth();
-  const ph = doc.internal.pageSize.getHeight();
-  const ROW_H = 7;
-  const HEADER_H = 8;
-  const x0 = 8;
+  const { boldLastRow = false } = opts;
+  const ROW_H = 6;
+  const HEAD_H = 7;
 
-  // Verifica espaço
-  if (y + HEADER_H + ROW_H > ph - 14) {
-    doc.addPage();
-    y = 28;
-  }
+  const repeatHeader = () => {
+    doc.setFillColor(...BLACK);
+    doc.rect(ML, y, CW, HEAD_H, 'F');
+    sf(doc, true, 6.5);
+    doc.setTextColor(...WHITE);
+    let cx = ML;
+    headers.forEach((h, i) => {
+      const align = i === 0 ? 'left' : 'right';
+      const tx = align === 'left' ? cx + 1.5 : cx + colWidths[i] - 1.5;
+      doc.text(String(h), tx, y + 4.8, { align });
+      cx += colWidths[i];
+    });
+  };
 
-  // Cabeçalho
-  fillRgb(doc, BLACK);
-  doc.rect(x0, y, pw - 16, HEADER_H, 'F');
-  setFont(doc, true, 7);
-  rgb(doc, WHITE);
-  let cx = x0;
-  headers.forEach((h, i) => {
-    const align = i === 0 ? 'left' : 'right';
-    const tx = align === 'left' ? cx + 2 : cx + colWidths[i] - 2;
-    doc.text(String(h), tx, y + 5.5, { align });
-    cx += colWidths[i];
-  });
-
-  y += HEADER_H;
+  y = ensureSpace(doc, y, HEAD_H + ROW_H);
+  repeatHeader();
+  y += HEAD_H;
 
   rows.forEach((row, ri) => {
-    if (y + ROW_H > ph - 14) {
-      doc.addPage();
-      y = 28;
-      // Repete cabeçalho
-      fillRgb(doc, BLACK);
-      doc.rect(x0, y, pw - 16, HEADER_H, 'F');
-      setFont(doc, true, 7);
-      rgb(doc, WHITE);
-      let cx2 = x0;
-      headers.forEach((h, i) => {
-        const align = i === 0 ? 'left' : 'right';
-        const tx = align === 'left' ? cx2 + 2 : cx2 + colWidths[i] - 2;
-        doc.text(String(h), tx, y + 5.5, { align });
-        cx2 += colWidths[i];
-      });
-      y += HEADER_H;
-    }
+    y = ensureSpace(doc, y, ROW_H);
+    if (y === BODY_TOP) { repeatHeader(); y += HEAD_H; }
 
     const isLast = ri === rows.length - 1 && boldLastRow;
-    if (zebra && ri % 2 === 0) {
-      fillRgb(doc, GRAY_LIGHT);
-      doc.rect(x0, y, pw - 16, ROW_H, 'F');
-    }
     if (isLast) {
-      fillRgb(doc, [230, 230, 230]);
-      doc.rect(x0, y, pw - 16, ROW_H, 'F');
+      doc.setFillColor(225, 225, 225);
+      doc.rect(ML, y, CW, ROW_H, 'F');
+    } else if (ri % 2 === 0) {
+      doc.setFillColor(...GRAY_LIGHT);
+      doc.rect(ML, y, CW, ROW_H, 'F');
     }
 
-    drawRgb(doc, GRAY_MED);
+    doc.setDrawColor(...GRAY_MED);
     doc.setLineWidth(0.1);
-    doc.line(x0, y + ROW_H, x0 + (pw - 16), y + ROW_H);
+    doc.line(ML, y + ROW_H, ML + CW, y + ROW_H);
 
-    setFont(doc, isLast, 7);
-
-    let cx3 = x0;
+    sf(doc, isLast, 6.5);
+    let cx = ML;
     row.forEach((cell, ci) => {
       const align = ci === 0 ? 'left' : 'right';
-      const tx = align === 'left' ? cx3 + 2 : cx3 + colWidths[ci] - 2;
-      const isNeg = typeof cell === 'number' && cell < 0;
-      const isHighlight = typeof cell === 'object' && cell?.highlight;
-      const displayVal = typeof cell === 'number' ? formatBRL(cell) : (typeof cell === 'object' ? String(cell?.value ?? '') : String(cell ?? ''));
-      rgb(doc, isNeg || isHighlight ? R21_RED : BLACK);
-      doc.text(displayVal, tx, y + 5, { align });
-      cx3 += colWidths[ci];
+      const tx = align === 'left' ? cx + 1.5 : cx + colWidths[ci] - 1.5;
+
+      let display, red = false;
+      if (cell === null || cell === undefined) {
+        display = '—';
+      } else if (typeof cell === 'number') {
+        display = formatBRL(cell);
+        red = cell < 0;
+      } else if (typeof cell === 'object') {
+        display = cell.value ?? '—';
+        red = !!cell.red;
+      } else {
+        display = String(cell);
+      }
+
+      doc.setTextColor(...(red ? R21_RED : BLACK));
+      doc.text(display, tx, y + 4.3, { align });
+      cx += colWidths[ci];
     });
 
     y += ROW_H;
   });
 
-  return y + 4;
+  return y + 3;
 }
 
-// ─────────────────────────────────────────────
-// GRÁFICO DE LINHA (saldo acumulado)
-// ─────────────────────────────────────────────
+// ── GRÁFICO DE LINHA ─────────────────────────────────────────
 function drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos) {
-  const pw = doc.internal.pageSize.getWidth();
-  const ph = doc.internal.pageSize.getHeight();
-  const CHART_H = 45;
-  const CHART_W = pw - 16;
-  const x0 = 8;
+  const CHART_H = 42;
+  const LABEL_W = 22; // espaço para labels eixo Y
+  const gX = ML + LABEL_W;
+  const gW = CW - LABEL_W - 2;
 
-  if (y + CHART_H + 10 > ph - 14) {
-    doc.addPage();
-    y = 28;
-  }
+  y = ensureSpace(doc, y, CHART_H + 16);
 
-  setFont(doc, true, 8);
-  rgb(doc, BLACK);
-  doc.text('Saldo Acumulado — Evolução Semanal', x0, y);
-  y += 5;
+  sf(doc, true, 8);
+  doc.setTextColor(...BLACK);
+  doc.text('Saldo Acumulado — Evolução Semanal', ML, y + 3);
+  y += 6;
 
-  // Coleta todos os valores para calcular escala
+  const gY = y;
+
+  // Escala
   const allVals = [];
   empreendimentos.forEach(emp => {
     semanas.forEach(s => {
@@ -261,246 +237,193 @@ function drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos) {
       if (v !== undefined) allVals.push(v);
     });
   });
-
-  if (allVals.length === 0) return y + 6;
+  if (allVals.length === 0) return y + CHART_H + 10;
 
   const minVal = Math.min(...allVals, 0);
   const maxVal = Math.max(...allVals, 0);
   const range = maxVal - minVal || 1;
 
-  // Área do gráfico
-  const gX = x0 + 18;
-  const gY = y;
-  const gW = CHART_W - 20;
-  const gH = CHART_H;
+  // Fundo
+  doc.setFillColor(252, 252, 252);
+  doc.setDrawColor(...GRAY_MED);
+  doc.setLineWidth(0.15);
+  doc.rect(gX, gY, gW, CHART_H, 'FD');
 
-  fillRgb(doc, [252, 252, 252]);
-  drawRgb(doc, GRAY_MED);
-  doc.setLineWidth(0.2);
-  doc.rect(gX, gY, gW, gH, 'FD');
+  // Grades e labels Y
+  for (let g = 0; g <= 4; g++) {
+    const gy = gY + (g / 4) * CHART_H;
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.1);
+    doc.line(gX, gy, gX + gW, gy);
+    const val = maxVal - (g / 4) * range;
+    sf(doc, false, 5);
+    doc.setTextColor(...GRAY_DARK);
+    // Abreviação do valor para caber
+    const absVal = Math.abs(val);
+    let label;
+    if (absVal >= 1000000) label = `${val < 0 ? '-' : ''}${(absVal / 1000000).toFixed(1)}M`;
+    else if (absVal >= 1000) label = `${val < 0 ? '-' : ''}${(absVal / 1000).toFixed(0)}k`;
+    else label = formatBRL(val);
+    doc.text(label, gX - 1, gy + 1.5, { align: 'right' });
+  }
 
   // Linha zero
   if (minVal < 0 && maxVal > 0) {
-    const zeroY = gY + gH - ((0 - minVal) / range) * gH;
-    drawRgb(doc, [220, 60, 60]);
+    const zeroY = gY + CHART_H - ((0 - minVal) / range) * CHART_H;
+    doc.setDrawColor(...R21_RED);
     doc.setLineWidth(0.3);
-    doc.setLineDash([2, 2], 0);
+    doc.setLineDash([1.5, 1.5], 0);
     doc.line(gX, zeroY, gX + gW, zeroY);
     doc.setLineDash([], 0);
   }
 
-  // Grades horizontais
-  drawRgb(doc, [220, 220, 220]);
-  doc.setLineWidth(0.1);
-  for (let g = 0; g <= 4; g++) {
-    const gy = gY + (g / 4) * gH;
-    doc.line(gX, gy, gX + gW, gy);
-    const label = formatBRL(maxVal - (g / 4) * range);
-    setFont(doc, false, 5.5);
-    rgb(doc, GRAY_DARK);
-    doc.text(label, gX - 2, gy + 1.5, { align: 'right' });
-  }
-
-  // Eixo X – rótulos de semana
+  // Labels eixo X
   semanas.forEach((s, si) => {
     const sx = gX + (si / Math.max(semanas.length - 1, 1)) * gW;
-    setFont(doc, false, 5.5);
-    rgb(doc, GRAY_DARK);
-    doc.text(s.rotulo || `S${s.numero}`, sx, gY + gH + 4, { align: 'center' });
+    sf(doc, false, 5);
+    doc.setTextColor(...GRAY_DARK);
+    const lbl = s.rotulo ? s.rotulo.substring(0, 11) : `S${s.numero}`;
+    doc.text(lbl, sx, gY + CHART_H + 4, { align: 'center' });
   });
 
-  // Paleta de cores para linhas
-  const colors = [
-    R21_RED,
-    [37, 99, 235],
-    [22, 163, 74],
-    [234, 88, 12],
-    [124, 58, 237],
-    [6, 182, 212],
-    [180, 83, 9],
-    [219, 39, 119],
-  ];
-
+  // Paleta
+  const palette = [R21_RED, [37, 99, 235], [22, 163, 74], [234, 88, 12], [124, 58, 237], [6, 182, 212], [180, 83, 9], [219, 39, 119]];
   const legendItems = [];
 
   empreendimentos.forEach((emp, ei) => {
-    const color = colors[ei % colors.length];
-    const pts = semanas.map((s, si) => {
-      const v = acumuladosPorEmp[emp.id]?.[s.id] || 0;
-      return {
-        x: gX + (si / Math.max(semanas.length - 1, 1)) * gW,
-        y: gY + gH - ((v - minVal) / range) * gH
-      };
-    });
+    const color = palette[ei % palette.length];
+    const pts = semanas.map((s, si) => ({
+      x: gX + (si / Math.max(semanas.length - 1, 1)) * gW,
+      y: gY + CHART_H - ((( acumuladosPorEmp[emp.id]?.[s.id] || 0) - minVal) / range) * CHART_H
+    }));
 
     doc.setDrawColor(...color);
-    doc.setLineWidth(0.8);
+    doc.setLineWidth(0.7);
     for (let pi = 0; pi < pts.length - 1; pi++) {
       doc.line(pts[pi].x, pts[pi].y, pts[pi + 1].x, pts[pi + 1].y);
     }
-
-    // Pontos
-    pts.forEach(pt => {
-      fillRgb(doc, color);
-      doc.circle(pt.x, pt.y, 1, 'F');
-    });
-
+    pts.forEach(pt => { doc.setFillColor(...color); doc.circle(pt.x, pt.y, 0.8, 'F'); });
     legendItems.push({ nome: emp.nome, color });
   });
 
-  y += gH + 8;
+  y += CHART_H + 7;
 
   // Legenda
-  let lx = x0;
-  legendItems.forEach(item => {
-    fillRgb(doc, item.color);
-    doc.rect(lx, y, 5, 3, 'F');
-    setFont(doc, false, 6.5);
-    rgb(doc, BLACK);
-    doc.text(item.nome, lx + 7, y + 2.5);
-    lx += Math.min(item.nome.length * 3.5 + 12, 60);
-    if (lx > pw - 20) {
-      lx = x0;
-      y += 6;
-    }
+  let lx = ML;
+  legendItems.forEach((item, li) => {
+    if (lx + 45 > PW - ML) { lx = ML; y += 5; }
+    doc.setFillColor(...item.color);
+    doc.rect(lx, y - 2, 4, 2.5, 'F');
+    sf(doc, false, 6);
+    doc.setTextColor(...BLACK);
+    doc.text(item.nome, lx + 5.5, y);
+    lx += Math.min(item.nome.length * 1.8 + 10, 50);
   });
 
-  return y + 8;
+  return y + 6;
 }
 
-// ─────────────────────────────────────────────
-// SEÇÃO DE UM EMPREENDIMENTO
-// ─────────────────────────────────────────────
-function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos, despesasProjetos, acumulados,
-  contasAPagar, aporteNecessario, participacoes, socios, cicloAtivo }) {
-  const pw = doc.internal.pageSize.getWidth();
-  const ph = doc.internal.pageSize.getHeight();
+// ── SEÇÃO COMPLETA DE UM EMPREENDIMENTO ──────────────────────
+function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos, despesasProjetos,
+  acumulados, contasAPagar, aporteNecessario, participacoes, socios }) {
 
-  // ── Título do empreendimento
-  if (y + 12 > ph - 14) { doc.addPage(); y = 28; }
-  fillRgb(doc, R21_RED);
-  doc.rect(8, y, pw - 16, 10, 'F');
-  setFont(doc, true, 10);
-  rgb(doc, WHITE);
-  doc.text(emp.nome, 12, y + 7);
-  y += 14;
+  // Barra título
+  y = ensureSpace(doc, y, 12);
+  doc.setFillColor(...R21_RED);
+  doc.rect(ML, y, CW, 9, 'F');
+  sf(doc, true, 9);
+  doc.setTextColor(...WHITE);
+  doc.text(emp.nome, ML + 2, y + 6.3);
+  y += 12;
 
-  // ── Indicadores
+  // Indicadores
   y = drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario);
 
-  // ── Fluxo Semanal
-  if (y + 10 > ph - 14) { doc.addPage(); y = 28; }
-  setFont(doc, true, 9);
-  rgb(doc, BLACK);
-  doc.text('Fluxo Semanal', 8, y);
-  y += 4;
+  // Fluxo Semanal
+  y = drawSectionTitle(doc, y, 'Fluxo Semanal');
 
   if (emp.tipo_fluxo === 'multi_projetos') {
-    // Tabela multi projetos
-    const projHeaders = ['Semana', ...projetos.map(p => p.nome), 'Total', 'Saldo Acum.'];
-    const totalW = pw - 16;
-    const firstW = 24;
-    const lastW = 22;
-    const otherW = (totalW - firstW - lastW * 2) / Math.max(projetos.length, 1);
-    const projColWidths = [firstW, ...projetos.map(() => otherW), lastW, lastW];
-
-    const projRows = semanas.map(s => {
+    const firstW = 22;
+    const lastW = 20;
+    const otherW = (CW - firstW - lastW * 2) / Math.max(projetos.length, 1);
+    const heads = ['Semana', ...projetos.map(p => p.nome), 'Total', 'Saldo Acum.'];
+    const widths = [firstW, ...projetos.map(() => otherW), lastW, lastW];
+    const tRows = semanas.map(s => {
       const total = projetos.reduce((sum, p) => {
         const d = despesasProjetos.find(d => d.projeto_id === p.id && d.semana_id === s.id);
         return sum + (d?.valor_despesa || 0);
       }, 0);
-      const acum = acumulados[s.id] || 0;
-      return [
-        s.rotulo || `S${s.numero}`,
-        ...projetos.map(p => {
-          const d = despesasProjetos.find(d => d.projeto_id === p.id && d.semana_id === s.id);
-          return d?.valor_despesa || 0;
-        }),
-        total,
-        acum
-      ];
+      return [s.rotulo || `S${s.numero}`, ...projetos.map(p => {
+        const d = despesasProjetos.find(d => d.projeto_id === p.id && d.semana_id === s.id);
+        return d?.valor_despesa || 0;
+      }), total, acumulados[s.id] || 0];
     });
-    y = drawTable(doc, y, projHeaders, projRows, projColWidths, { boldLastRow: false });
+    y = drawTable(doc, y, heads, tRows, widths);
   } else {
-    // Tabela padrão
     const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
     const cols = [];
     if (emp.despesa_dividida_r21) {
-      cols.push({ key: 'despesa_consolidada', label: 'Despesa GTR' });
-      cols.push({ key: 'despesa_r21', label: 'Despesa R21' });
+      cols.push({ key: 'despesa_consolidada', label: 'Desp. GTR' });
+      cols.push({ key: 'despesa_r21', label: 'Desp. R21' });
       cols.push({ key: 'despesa_afac', label: 'Prev. Afac' });
     } else {
       cols.push({ key: 'despesa_consolidada', label: 'Desp. Cons.' });
       cols.push({ key: 'despesa_prevista', label: 'Desp. Prev.' });
-      if (emp.tipo_fluxo === 'com_aportes') {
-        cols.push({ key: 'despesa_afac', label: 'Prev. Afac' });
-      }
+      if (emp.tipo_fluxo === 'com_aportes') cols.push({ key: 'despesa_afac', label: 'Prev. Afac' });
     }
     if (emp.tem_receita !== false) {
       cols.push({ key: 'receita_consolidada', label: 'Rec. Cons.' });
       cols.push({ key: 'receita_prevista', label: 'Rec. Prev.' });
     }
-    cols.push({ key: '__saldo_semana__', label: 'Saldo Sem.' });
-    cols.push({ key: '__saldo_acum__', label: 'Saldo Acum.' });
+    cols.push({ key: '_ss', label: 'Saldo Sem.' });
+    cols.push({ key: '_sa', label: 'Saldo Acum.' });
 
-    const totalW = pw - 16;
     const firstW = 24;
-    const restW = (totalW - firstW) / cols.length;
-    const colWidths = [firstW, ...cols.map(() => restW)];
-
-    const tableRows = semanas.map(s => {
+    const colW = (CW - firstW) / cols.length;
+    const widths = [firstW, ...cols.map(() => colW)];
+    const heads = ['Semana', ...cols.map(c => c.label)];
+    const tRows = semanas.map(s => {
       const lanc = empLancs.find(l => l.semana_id === s.id) || {};
-      const saldoSem = calcSaldoSemana(lanc, emp);
-      const saldoAcum = acumulados[s.id] || 0;
-      return [
-        s.rotulo || `S${s.numero}`,
-        ...cols.map(c => {
-          if (c.key === '__saldo_semana__') return saldoSem;
-          if (c.key === '__saldo_acum__') return saldoAcum;
-          return lanc[c.key] || 0;
-        })
-      ];
+      const ss = calcSaldoSemana(lanc, emp);
+      const sa = acumulados[s.id] || 0;
+      return [s.rotulo || `S${s.numero}`, ...cols.map(c => {
+        if (c.key === '_ss') return ss;
+        if (c.key === '_sa') return sa;
+        return lanc[c.key] || 0;
+      })];
     });
-
-    y = drawTable(doc, y, ['Semana', ...cols.map(c => c.label)], tableRows, colWidths);
+    y = drawTable(doc, y, heads, tRows, widths);
   }
 
-  // ── Aportes (se aplicável)
+  // Aportes
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if ((emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && empParts.length > 0) {
-    if (y + 10 > ph - 14) { doc.addPage(); y = 28; }
-    setFont(doc, true, 9);
-    rgb(doc, BLACK);
-    doc.text('Resumo Valores Aportados (Equalização)', 8, y);
-    y += 4;
-
     const equalizacao = calcEqualizacao(empParts, aporteNecessario);
     const eqComFator = calcFatorRateio(equalizacao);
 
-    const eqHeaders = ['Sócio', '% Soc.', 'Aportado', 'Devolvido', 'Saldo Dev.', '% Atual', 'Total p/ Eq.', 'Aporte Nec.', 'Fator'];
-    const totalW = pw - 16;
-    const eqWidths = [28, 14, 24, 22, 22, 14, 24, 24, 14];
+    y = drawSectionTitle(doc, y, 'Resumo Valores Aportados (Equalização)');
+    const eqHeads = ['Sócio', '% Soc.', 'Aportado', 'Devolvido', 'Saldo Dev.', '% Atual', 'Total Eq.', 'Aporte Nec.', 'Fator'];
+    const eqW = [28, 13, 28, 26, 26, 14, 28, 28, 14];
+    // ajusta para CW exato
+    const eqSum = eqW.reduce((a, b) => a + b, 0);
+    const eqScale = CW / eqSum;
+    const eqWscaled = eqW.map(w => w * eqScale);
+
     const eqRows = eqComFator.map(e => [
       socios.find(s => s.id === e.socio_id)?.nome || '—',
-      `${(e.percentual_sociedade || 0).toFixed(2)}%`,
+      `${(e.percentual_sociedade || 0).toFixed(1)}%`,
       e.valor_aportado || 0,
       e.valor_devolvido || 0,
       e.saldoADevolver || 0,
-      `${((e.percentualAtual || 0) * 100).toFixed(2)}%`,
+      `${((e.percentualAtual || 0) * 100).toFixed(1)}%`,
       e.totalParaEqualizar || 0,
-      e.aporteNecessario < 0 ? { value: formatBRL(e.aporteNecessario), highlight: true } : e.aporteNecessario,
-      `${((e.fatorRateio || 0) * 100).toFixed(2)}%`,
+      e.aporteNecessario,
+      `${((e.fatorRateio || 0) * 100).toFixed(1)}%`,
     ]);
-    y = drawTable(doc, y, eqHeaders, eqRows, eqWidths);
+    y = drawTable(doc, y, eqHeads, eqRows, eqWscaled);
 
     // Aportes por semana
-    if (y + 10 > ph - 14) { doc.addPage(); y = 28; }
-    setFont(doc, true, 9);
-    rgb(doc, BLACK);
-    doc.text('Aportes por Semana', 8, y);
-    y += 4;
-
-    const empLancsForAporte = lancamentos.filter(l => l.empreendimento_id === emp.id);
+    const empLancsA = lancamentos.filter(l => l.empreendimento_id === emp.id);
     const despPorSemana = {};
     if (emp.tipo_fluxo === 'multi_projetos') {
       semanas.forEach(s => {
@@ -510,55 +433,48 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
         }, 0);
       });
     }
-    const aportesSemana = calcAportesPorSemana(empLancsForAporte, emp, saldoEmp, semanas, eqComFator, despPorSemana, projetos);
+    const aportesSemana = calcAportesPorSemana(empLancsA, emp, saldoEmp, semanas, eqComFator, despPorSemana, projetos);
 
-    const asHeaders = ['Sócio', ...semanas.map(s => s.rotulo || `S${s.numero}`), 'Total'];
-    const asW = (pw - 16 - 30) / (semanas.length + 1);
-    const asWidths = [30, ...semanas.map(() => asW), asW];
-
+    y = drawSectionTitle(doc, y, 'Aportes por Semana');
+    const firstW = 30;
+    const asColW = (CW - firstW) / (semanas.length + 1);
+    const asHeads = ['Sócio', ...semanas.map(s => s.rotulo ? s.rotulo.substring(0, 11) : `S${s.numero}`), 'Total'];
+    const asWidths = [firstW, ...semanas.map(() => asColW), asColW];
     const asRows = [];
     eqComFator.forEach(e => {
-      let totalSocio = 0;
+      let tot = 0;
       const row = [socios.find(s => s.id === e.socio_id)?.nome || '—'];
-      semanas.forEach(s => {
-        const val = aportesSemana[s.id]?.porSocio[e.socio_id] || 0;
-        totalSocio += val;
-        row.push(val);
-      });
-      row.push(totalSocio);
+      semanas.forEach(s => { const v = aportesSemana[s.id]?.porSocio[e.socio_id] || 0; tot += v; row.push(v); });
+      row.push(tot);
       asRows.push(row);
     });
-    // Linha total
-    const totalRow = ['TOTAL'];
-    let grandTotal = 0;
-    semanas.forEach(s => {
-      const t = aportesSemana[s.id]?.total || 0;
-      grandTotal += t;
-      totalRow.push(t);
-    });
-    totalRow.push(grandTotal);
-    asRows.push(totalRow);
-    y = drawTable(doc, y, asHeaders, asRows, asWidths, { boldLastRow: true });
+    // total row
+    const tRow = ['TOTAL'];
+    let grand = 0;
+    semanas.forEach(s => { const t = aportesSemana[s.id]?.total || 0; grand += t; tRow.push(t); });
+    tRow.push(grand);
+    asRows.push(tRow);
+    y = drawTable(doc, y, asHeads, asRows, asWidths, { boldLastRow: true });
   }
 
-  // ── Gráfico de linha (só para este empreendimento)
+  // Gráfico
   y = drawLineChart(doc, y, semanas, { [emp.id]: acumulados }, [emp]);
 
-  // ── Observações
+  // Observações
   const obs = saldoEmp?.observacoes;
   if (obs) {
-    if (y + 12 > ph - 14) { doc.addPage(); y = 28; }
-    setFont(doc, true, 8);
-    rgb(doc, BLACK);
-    doc.text('Observações:', 8, y);
-    y += 4;
-    setFont(doc, false, 7.5);
-    rgb(doc, GRAY_DARK);
-    const lines = doc.splitTextToSize(obs, pw - 16);
+    y = ensureSpace(doc, y, 14);
+    sf(doc, true, 7.5);
+    doc.setTextColor(...BLACK);
+    doc.text('Observações:', ML, y + 3);
+    y += 6;
+    sf(doc, false, 7);
+    doc.setTextColor(...GRAY_DARK);
+    const lines = doc.splitTextToSize(obs, CW);
     lines.forEach(line => {
-      if (y + 5 > ph - 14) { doc.addPage(); y = 28; }
-      doc.text(line, 8, y);
-      y += 4.5;
+      y = ensureSpace(doc, y, 5);
+      doc.text(line, ML, y + 3);
+      y += 5;
     });
     y += 2;
   }
@@ -566,34 +482,36 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
   return y;
 }
 
-// ─────────────────────────────────────────────
-// SUBTÍTULO DO CICLO
-// ─────────────────────────────────────────────
+// ── SUBTÍTULO DO CICLO ───────────────────────────────────────
 function buildSubtitulo(cicloAtivo, semanas) {
   if (!cicloAtivo) return '';
   const s0 = semanas[0];
   const sN = semanas[semanas.length - 1];
-  const range = s0 && sN ? ` · ${s0.data_inicio ? new Date(s0.data_inicio + 'T00:00:00').toLocaleDateString('pt-BR') : s0.rotulo} a ${sN.data_fim ? new Date(sN.data_fim + 'T00:00:00').toLocaleDateString('pt-BR') : sN.rotulo}` : '';
+  const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+  const range = s0 && sN ? ` · ${fmt(s0.data_inicio) || s0.rotulo} a ${fmt(sN.data_fim) || sN.rotulo}` : '';
   return `${cicloAtivo.nome}${range}`;
 }
 
-// ─────────────────────────────────────────────
-// EXPORT: PDF POR EMPREENDIMENTO
-// ─────────────────────────────────────────────
+// ── EXPORT: PDF POR EMPREENDIMENTO ───────────────────────────
 export function gerarPDFEmpreendimento({
   emp, saldoEmp, semanas, lancamentos, projetos, despesasProjetos,
   acumulados, contasAPagar, aporteNecessario, participacoes, socios, cicloAtivo
 }) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-  const geradoEm = now();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const geradoEm = nowStr();
   const subtitulo = buildSubtitulo(cicloAtivo, semanas);
 
-  drawHeader(doc, `Fluxo de Caixa Semanal — ${emp.nome}`, subtitulo, geradoEm);
-  let y = 28;
+  // Salva no doc para reutilizar em novas páginas
+  doc.__titulo = `Fluxo de Caixa Semanal — ${emp.nome}`;
+  doc.__subtitulo = subtitulo;
+  doc.__geradoEm = geradoEm;
 
-  y = drawEmpSection(doc, y, {
-    emp, saldoEmp, semanas, lancamentos, projetos, despesasProjetos,
-    acumulados, contasAPagar, aporteNecessario, participacoes, socios, cicloAtivo
+  drawHeader(doc, doc.__titulo, subtitulo, geradoEm);
+
+  drawEmpSection(doc, BODY_TOP, {
+    emp, saldoEmp, semanas, lancamentos, projetos: projetos || [],
+    despesasProjetos: despesasProjetos || [], acumulados, contasAPagar,
+    aporteNecessario, participacoes, socios
   });
 
   drawFooter(doc, geradoEm);
@@ -602,144 +520,112 @@ export function gerarPDFEmpreendimento({
   doc.save(`Fluxo de Caixa - ${emp.nome} - ${nomeCiclo}.pdf`);
 }
 
-// ─────────────────────────────────────────────
-// EXPORT: PDF GERAL CONSOLIDADO
-// ─────────────────────────────────────────────
+// ── EXPORT: PDF GERAL ────────────────────────────────────────
 export function gerarPDFGeral({
   empreendimentos, saldos, semanas, lancamentos, allProjetos, despesasProjetos,
   participacoes, socios, cicloAtivo, empData
 }) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-  const geradoEm = now();
-  const pw = doc.internal.pageSize.getWidth();
-  const ph = doc.internal.pageSize.getHeight();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const geradoEm = nowStr();
   const subtitulo = buildSubtitulo(cicloAtivo, semanas);
+  doc.__titulo = 'Fluxo de Caixa Semanal — Relatório Geral';
+  doc.__subtitulo = subtitulo;
+  doc.__geradoEm = geradoEm;
 
-  // ── PÁGINA 1: Resumo Executivo ──────────────────────────────
-  drawHeader(doc, 'Fluxo de Caixa Semanal — Relatório Geral', subtitulo, geradoEm);
-  let y = 28;
+  drawHeader(doc, doc.__titulo, subtitulo, geradoEm);
+  let y = BODY_TOP;
 
-  // Tabela resumo
-  setFont(doc, true, 9);
-  rgb(doc, BLACK);
-  doc.text('Resumo por Empreendimento', 8, y);
-  y += 4;
-
-  const resumoHeaders = ['Empreendimento', 'Saldo Inicial', 'Saldo Final (S6)', 'Contas a Pagar', 'Aporte Nec.'];
-  const totalW = pw - 16;
-  const resumoWidths = [80, 42, 42, 42, 42];
-  // preenche o restante na primeira col
-  resumoWidths[0] = totalW - resumoWidths.slice(1).reduce((a, b) => a + b, 0);
-
-  const resumoRows = empreendimentos.map(emp => {
+  // Resumo executivo
+  y = drawSectionTitle(doc, y, 'Resumo por Empreendimento');
+  const rHeads = ['Empreendimento', 'Saldo Inicial', 'Saldo Final (S6)', 'Contas a Pagar', 'Aporte Nec.'];
+  const fixedW = 35;
+  const firstW = CW - fixedW * (rHeads.length - 1);
+  const rWidths = [firstW, fixedW, fixedW, fixedW, fixedW];
+  const rRows = empreendimentos.map(emp => {
     const d = empData[emp.id] || {};
-    const temNeg = d.temSaldoNegativo;
     return [
-      temNeg ? { value: emp.nome, highlight: true } : emp.nome,
+      d.temSaldoNegativo ? { value: emp.nome, red: true } : emp.nome,
       d.saldoAtual || 0,
       d.saldoAcumuladoFinal || 0,
       d.contasAPagar || 0,
-      d.aporteNecessario > 0 ? { value: formatBRL(d.aporteNecessario), highlight: true } : (d.aporteNecessario || 0)
+      d.aporteNecessario > 0 ? { value: formatBRL(d.aporteNecessario), red: true } : (d.aporteNecessario || 0)
     ];
   });
-  y = drawTable(doc, y, resumoHeaders, resumoRows, resumoWidths);
+  y = drawTable(doc, y, rHeads, rRows, rWidths);
 
   // Gráfico comparativo
   const acumuladosPorEmp = {};
   empreendimentos.forEach(emp => { acumuladosPorEmp[emp.id] = empData[emp.id]?.acumulados || {}; });
   y = drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos);
 
-  // Tabela Aportes Ricardo/GTR/RIC por semana
-  // Empreendimentos com aportes
+  // Aportes consolidados
   const empsComAportes = empreendimentos.filter(e => e.tipo_fluxo === 'com_aportes' || e.tipo_fluxo === 'multi_projetos');
   if (empsComAportes.length > 0) {
-    if (y + 10 > ph - 14) { doc.addPage(); y = 28; }
-    setFont(doc, true, 9);
-    rgb(doc, BLACK);
-    doc.text('Aportes Consolidados por Semana', 8, y);
-    y += 4;
-
-    const aportesHeaders = ['Empreendimento', ...semanas.map(s => s.rotulo || `S${s.numero}`), 'Total'];
-    const aColW = (pw - 16 - 60) / (semanas.length + 1);
-    const aColWidths = [60, ...semanas.map(() => aColW), aColW];
-
+    y = drawSectionTitle(doc, y, 'Aportes Consolidados por Semana');
+    const aFirstW = 40;
+    const aColW = (CW - aFirstW) / (semanas.length + 1);
+    const aHeads = ['Empreendimento', ...semanas.map(s => s.rotulo ? s.rotulo.substring(0, 11) : `S${s.numero}`), 'Total'];
+    const aWidths = [aFirstW, ...semanas.map(() => aColW), aColW];
     const aRows = [];
+
     empsComAportes.forEach(emp => {
       const saldoEmp = saldos.find(s => s.empreendimento_id === emp.id);
       const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
-      const projetos = emp.tipo_fluxo === 'multi_projetos' ? allProjetos : [];
+      const projetos = emp.tipo_fluxo === 'multi_projetos' ? (allProjetos || []) : [];
       const despPorSemana = {};
       if (emp.tipo_fluxo === 'multi_projetos') {
         semanas.forEach(s => {
           despPorSemana[s.id] = projetos.reduce((sum, p) => {
-            const d = despesasProjetos.find(dd => dd.projeto_id === p.id && dd.semana_id === s.id);
+            const d = (despesasProjetos || []).find(dd => dd.projeto_id === p.id && dd.semana_id === s.id);
             return sum + (d?.valor_despesa || 0);
           }, 0);
         });
       }
       const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
-      if (empParts.length === 0) return;
+      if (!empParts.length) return;
 
       let saldoAtual = saldoEmp?.saldo_atual || 0;
       if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
         saldoAtual = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
       }
-      const contasAPagar = calcContasAPagar(empLancs, semanas, despPorSemana);
-      const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
-      const equalizacao = calcEqualizacao(empParts, aporteTotal);
-      const eqComFator = calcFatorRateio(equalizacao);
-      const aportesSemana = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eqComFator, despPorSemana, projetos);
-
-      let grandTotal = 0;
+      const cap = calcContasAPagar(empLancs, semanas, despPorSemana);
+      const at = cap > saldoAtual ? cap - saldoAtual + (emp.margem_aporte_total || 0) : 0;
+      const eq = calcFatorRateio(calcEqualizacao(empParts, at));
+      const as = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eq, despPorSemana, projetos);
+      let grand = 0;
       const row = [emp.nome];
-      semanas.forEach(s => {
-        const t = aportesSemana[s.id]?.total || 0;
-        grandTotal += t;
-        row.push(t);
-      });
-      row.push(grandTotal);
+      semanas.forEach(s => { const t = as[s.id]?.total || 0; grand += t; row.push(t); });
+      row.push(grand);
       aRows.push(row);
     });
 
     if (aRows.length > 0) {
-      // Linha total consolidado
-      const totalConsolRow = ['TOTAL GERAL'];
-      let grandGrand = 0;
-      semanas.forEach((s, si) => {
-        const t = aRows.reduce((sum, r) => sum + (r[si + 1] || 0), 0);
-        grandGrand += t;
-        totalConsolRow.push(t);
-      });
-      totalConsolRow.push(grandGrand);
-      aRows.push(totalConsolRow);
-      y = drawTable(doc, y, aportesHeaders, aRows, aColWidths, { boldLastRow: true });
+      const totRow = ['TOTAL GERAL'];
+      let g = 0;
+      semanas.forEach((_, si) => { const t = aRows.reduce((sum, r) => sum + (typeof r[si + 1] === 'number' ? r[si + 1] : 0), 0); g += t; totRow.push(t); });
+      totRow.push(g);
+      aRows.push(totRow);
+      y = drawTable(doc, y, aHeads, aRows, aWidths, { boldLastRow: true });
     }
   }
 
-  // ── PÁGINAS SEGUINTES: uma por empreendimento ──────────────
+  // Páginas por empreendimento
   empreendimentos.forEach(emp => {
     doc.addPage();
-    drawHeader(doc, `Fluxo de Caixa Semanal — ${emp.nome}`, subtitulo, geradoEm);
-    let ey = 28;
+    doc.__titulo = `Fluxo de Caixa Semanal — ${emp.nome}`;
+    drawHeader(doc, doc.__titulo, subtitulo, geradoEm);
 
     const saldoEmp = saldos.find(s => s.empreendimento_id === emp.id);
-    const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
-    const projetos = emp.tipo_fluxo === 'multi_projetos' ? allProjetos : [];
+    const projetos = emp.tipo_fluxo === 'multi_projetos' ? (allProjetos || []) : [];
     const d = empData[emp.id] || {};
 
-    drawEmpSection(doc, ey, {
-      emp,
-      saldoEmp,
-      semanas,
-      lancamentos,
-      projetos,
-      despesasProjetos,
+    drawEmpSection(doc, BODY_TOP, {
+      emp, saldoEmp, semanas, lancamentos, projetos,
+      despesasProjetos: despesasProjetos || [],
       acumulados: d.acumulados || {},
       contasAPagar: d.contasAPagar || 0,
       aporteNecessario: d.aporteNecessario || 0,
-      participacoes,
-      socios,
-      cicloAtivo
+      participacoes, socios
     });
   });
 

@@ -19,13 +19,13 @@ export default function SaldoChart({ empreendimentos, semanas, acumuladosPorEmp 
   const customTooltip = ({ active, payload, label }) => {
     if (!active || !payload) return null;
     return (
-      <div className="bg-card border border-border rounded p-3 shadow-lg">
-        <p className="font-heading font-bold text-xs mb-2">{label}</p>
+      <div className="bg-card border border-border rounded p-4 shadow-lg">
+        <p className="font-heading font-bold text-[14px] mb-2">{label}</p>
         {payload.map((entry, idx) => (
-          <p key={idx} className="text-xs flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <p key={idx} className="text-[14px] flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
             <span className="text-muted-foreground">{entry.name}:</span>
-            <span className={`font-bold ${entry.value < 0 ? 'text-primary' : ''}`}>{formatBRL(entry.value)}</span>
+            <span className={`font-semibold ${entry.value < 0 ? 'text-primary' : ''}`}>{formatBRL(entry.value)}</span>
           </p>
         ))}
       </div>
@@ -34,19 +34,19 @@ export default function SaldoChart({ empreendimentos, semanas, acumuladosPorEmp 
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-heading">Saldo Acumulado por Semana</CardTitle>
+      <CardHeader className="pb-3 px-6 pt-6">
+        <CardTitle className="text-[20px] font-heading font-medium">Saldo Acumulado por Semana</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
+      <CardContent className="px-6 pb-6">
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <LineChart data={chartData} margin={{ top: 5, right: 16, left: 16, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fontFamily: 'Ubuntu' }} />
-              <YAxis tick={{ fontSize: 11, fontFamily: 'Ubuntu' }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+              <XAxis dataKey="name" tick={{ fontSize: 13, fontFamily: 'Ubuntu' }} />
+              <YAxis tick={{ fontSize: 13, fontFamily: 'Ubuntu' }} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={customTooltip} />
               <ReferenceLine y={0} stroke="#AD0000" strokeDasharray="4 4" />
-              <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'Ubuntu' }} />
+              <Legend wrapperStyle={{ fontSize: 13, fontFamily: 'Ubuntu' }} />
               {empreendimentos.map((emp, idx) => (
                 <Line
                   key={emp.id}

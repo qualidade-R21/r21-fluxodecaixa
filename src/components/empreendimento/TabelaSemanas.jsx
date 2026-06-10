@@ -8,7 +8,7 @@ import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-function MoneyInput({ value, onChange, disabled, className }) {
+function MoneyInput({ value, onChange, disabled, isCalc }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState('');
 
@@ -24,7 +24,11 @@ function MoneyInput({ value, onChange, disabled, className }) {
   };
 
   if (disabled) {
-    return <span className={className}>{formatBRL(value || 0)}</span>;
+    return (
+      <span className={`tabular-nums text-[15px] ${(value || 0) < 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+        {formatBRL(value || 0)}
+      </span>
+    );
   }
 
   return editing ? (
@@ -34,19 +38,19 @@ function MoneyInput({ value, onChange, disabled, className }) {
       onChange={e => setRaw(e.target.value)}
       onBlur={handleBlur}
       autoFocus
-      className="h-7 text-xs w-28 text-right"
+      className="h-8 text-[15px] w-32 text-right"
     />
   ) : (
     <span
       onClick={handleFocus}
-      className={`cursor-pointer hover:bg-muted px-1 rounded text-xs tabular-nums ${className}`}
+      className={`cursor-pointer hover:bg-muted px-1.5 py-0.5 rounded text-[15px] tabular-nums ${(value || 0) < 0 ? 'text-primary font-medium' : ''}`}
     >
       {formatBRL(value || 0)}
     </span>
   );
 }
 
-export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acumulados, onUpdate }) {
+export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acumulados }) {
   const qc = useQueryClient();
 
   const handleChange = async (semanaId, field, value) => {
@@ -65,20 +69,18 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
 
   const getLanc = (semanaId) => lancamentos.find(l => l.semana_id === semanaId && l.empreendimento_id === emp.id) || {};
 
-  // Build columns based on tipo_fluxo
   const columns = [];
   if (emp.despesa_dividida_r21) {
     columns.push({ key: 'despesa_consolidada', label: 'Despesa GTR', editable: true });
     columns.push({ key: 'despesa_r21', label: 'Despesa R21', editable: true });
-    columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true });
+    columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true, isCalc: true });
   } else if (emp.tipo_fluxo === 'multi_projetos') {
-    // handled in a different component
     return null;
   } else {
     columns.push({ key: 'despesa_consolidada', label: 'Despesa Cons.', editable: true });
     columns.push({ key: 'despesa_prevista', label: 'Despesa Prev.', editable: true });
     if (emp.tipo_fluxo === 'com_aportes') {
-      columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true });
+      columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true, isCalc: true });
     }
   }
 
@@ -89,45 +91,45 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-heading">Fluxo Semanal</CardTitle>
+      <CardHeader className="pb-3 px-6 pt-6">
+        <CardTitle className="text-[20px] font-heading font-medium">Fluxo Semanal</CardTitle>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <table className="w-full text-xs">
+      <CardContent className="overflow-x-auto px-6 pb-6">
+        <table className="w-full min-w-[700px]">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-2 px-2 font-heading font-bold text-muted-foreground">Semana</th>
+            <tr className="border-b-2 border-border">
+              <th className="text-left py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Semana</th>
               {columns.map(col => (
-                <th key={col.key} className="text-right py-2 px-2 font-heading font-bold text-muted-foreground">
+                <th key={col.key} className={`text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] ${col.isCalc ? 'bg-[#F5F5F5]' : ''}`}>
                   {col.label}
                 </th>
               ))}
-              <th className="text-right py-2 px-2 font-heading font-bold text-muted-foreground">Saldo Semana</th>
-              <th className="text-right py-2 px-2 font-heading font-bold text-muted-foreground">Saldo Acumulado</th>
+              <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Saldo Semana</th>
+              <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Saldo Acumulado</th>
             </tr>
           </thead>
           <tbody>
-            {semanas.map(s => {
+            {semanas.map((s, si) => {
               const lanc = getLanc(s.id);
               const saldoSemana = calcSaldoSemana(lanc, emp);
               const saldoAcum = acumulados[s.id] || 0;
 
               return (
-                <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30">
-                  <td className="py-2 px-2">
-                    <Badge variant="outline" className="text-[10px] font-heading">{s.rotulo || `Sem ${s.numero}`}</Badge>
+                <tr key={s.id} className={`border-b border-[#E5E5E5] hover:bg-muted/30 ${si % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
+                  <td className="py-2 px-3">
+                    <Badge variant="outline" className="text-[13px] font-heading font-medium">{s.rotulo || `Sem ${s.numero}`}</Badge>
                   </td>
                   {columns.map(col => (
-                    <td key={col.key} className="text-right py-2 px-2">
-                      <div className="flex items-center justify-end gap-1">
+                    <td key={col.key} className={`text-right py-2 px-3 ${col.isCalc ? 'bg-[#F5F5F5]' : ''}`}>
+                      <div className="flex items-center justify-end gap-1.5">
                         {col.isAfac && lanc[col.key] > 0 && (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger>
-                                <Link2 className="w-3 h-3 text-muted-foreground" />
+                                <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="text-xs">Vem dos aportes automáticos</p>
+                                <p className="text-[13px]">Vem dos aportes automáticos</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -136,15 +138,15 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
                           value={lanc[col.key]}
                           onChange={(v) => handleChange(s.id, col.key, v)}
                           disabled={!col.editable}
-                          className={lanc[col.key] < 0 ? 'text-primary' : ''}
+                          isCalc={col.isCalc}
                         />
                       </div>
                     </td>
                   ))}
-                  <td className={`text-right py-2 px-2 font-bold tabular-nums ${saldoSemana < 0 ? 'text-primary' : ''}`}>
+                  <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5] ${saldoSemana < 0 ? 'text-primary' : ''}`}>
                     {formatBRL(saldoSemana)}
                   </td>
-                  <td className={`text-right py-2 px-2 font-bold tabular-nums ${saldoAcum < 0 ? 'text-primary' : ''}`}>
+                  <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5] ${saldoAcum < 0 ? 'text-primary' : ''}`}>
                     {formatBRL(saldoAcum)}
                   </td>
                 </tr>

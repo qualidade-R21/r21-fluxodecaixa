@@ -93,25 +93,25 @@ export default function Empreendimento() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link to="/">
-          <Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
         </Link>
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 bg-foreground rounded flex items-center justify-center">
+          <div className="w-11 h-11 bg-foreground rounded flex items-center justify-center shrink-0">
             <Building2 className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-heading font-bold">{emp.nome}</h1>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] capitalize font-heading">{emp.tipo_fluxo.replace('_', ' ')}</Badge>
-              {emp.banco_principal && <span className="text-xs text-muted-foreground">{emp.banco_principal}</span>}
+            <h1 className="text-[28px] font-heading font-bold leading-tight">{emp.nome}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <Badge variant="outline" className="text-[13px] capitalize font-heading">{emp.tipo_fluxo.replace('_', ' ')}</Badge>
+              {emp.banco_principal && <span className="text-[13px] text-muted-foreground">{emp.banco_principal}</span>}
             </div>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleGerarPDF} className="gap-2 shrink-0">
+        <Button variant="outline" onClick={handleGerarPDF} className="gap-2 shrink-0 text-[15px]">
           <FileDown className="w-4 h-4" />
           Gerar PDF
         </Button>

@@ -50,59 +50,70 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
     { label: 'Inadimplência', key: 'inadimplencia', show: emp.tem_inadimplencia },
   ];
 
+  const visibleItems = items.filter(i => i.show);
+
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-heading font-bold">Indicadores do Ciclo</h3>
-          <Button size="sm" variant={editing ? 'default' : 'outline'} onClick={() => editing ? handleSave() : setEditing(true)}>
-            {editing ? <><Save className="w-3 h-3 mr-1" /> Salvar</> : 'Editar'}
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-[20px] font-heading font-medium">Indicadores do Ciclo</h3>
+          <Button
+            size="sm"
+            variant={editing ? 'default' : 'outline'}
+            className="text-[15px]"
+            onClick={() => editing ? handleSave() : setEditing(true)}
+          >
+            {editing ? <><Save className="w-4 h-4 mr-1.5" /> Salvar</> : 'Editar'}
           </Button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {items.filter(i => i.show).map(item => (
-            <div key={item.key} className="space-y-1">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{item.label}</p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {visibleItems.map(item => (
+            <div key={item.key} className="bg-muted/40 rounded-lg p-4 space-y-2">
+              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">{item.label}</p>
               {editing ? (
                 <Input
                   type="number"
                   step="0.01"
                   value={form[item.key]}
                   onChange={e => setForm({ ...form, [item.key]: parseFloat(e.target.value) || 0 })}
-                  className="h-8 text-xs"
+                  className="h-9 text-[15px]"
                 />
               ) : (
-                <p className={`text-sm font-bold font-heading tabular-nums ${(form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
+                <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${(form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
                   {formatBRL(form[item.key])}
                 </p>
               )}
             </div>
           ))}
-          <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Contas a Pagar (Mês)</p>
-            <p className="text-sm font-bold font-heading tabular-nums">{formatBRL(contasAPagar)}</p>
+
+          <div className="bg-muted/40 rounded-lg p-4 space-y-2">
+            <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">Contas a Pagar (Mês)</p>
+            <p className="text-[26px] font-medium font-heading tabular-nums leading-tight">{formatBRL(contasAPagar)}</p>
           </div>
+
           {(emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && (
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Aporte Total Nec.</p>
-              <p className={`text-sm font-bold font-heading tabular-nums ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
+            <div className={`rounded-lg p-4 space-y-2 ${aporteNecessario > 0 ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
+              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">Aporte Total Nec.</p>
+              <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
                 {formatBRL(aporteNecessario)}
               </p>
             </div>
           )}
         </div>
+
         {/* Observações */}
-        <div className="mt-4">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Observações</p>
+        <div className="mt-6">
+          <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Observações</p>
           {editing ? (
             <Textarea
               value={form.observacoes}
               onChange={e => setForm({ ...form, observacoes: e.target.value })}
-              className="text-xs"
+              className="text-[15px]"
               rows={2}
             />
           ) : (
-            <p className="text-xs text-muted-foreground">{form.observacoes || '—'}</p>
+            <p className="text-[14px] text-muted-foreground">{form.observacoes || '—'}</p>
           )}
         </div>
       </CardContent>

@@ -15,11 +15,11 @@ export default function Layout() {
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
       <header className="sticky top-0 z-50 bg-card border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-14">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm font-heading">R21</span>
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-base font-heading">R21</span>
               </div>
               <span className="font-heading font-bold text-foreground text-lg hidden sm:block">Fluxo de Caixa</span>
             </Link>
@@ -32,7 +32,7 @@ export default function Layout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded text-[15px] font-medium transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -49,7 +49,7 @@ export default function Layout() {
       </header>
       
       {/* Content */}
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         <Outlet />
       </main>
     </div>

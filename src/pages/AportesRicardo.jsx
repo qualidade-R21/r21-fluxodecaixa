@@ -101,58 +101,58 @@ export default function AportesRicardo() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-heading font-bold">Aportes Ricardo</h1>
-        <p className="text-sm text-muted-foreground mt-1">Consolidação dos aportes vinculados ao Ricardo</p>
+        <h1 className="text-[28px] font-heading font-bold">Aportes Ricardo</h1>
+        <p className="text-[14px] text-muted-foreground mt-1">Consolidação dos aportes vinculados ao Ricardo</p>
       </div>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-heading">Aportes por Semana</CardTitle>
+        <CardHeader className="pb-3 px-6 pt-6">
+          <CardTitle className="text-[20px] font-heading font-medium">Aportes por Semana</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <CardContent className="overflow-x-auto px-6 pb-6">
+          <table className="w-full text-[15px] min-w-[600px]">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2 px-2 font-heading text-muted-foreground">Origem</th>
+              <tr className="border-b-2 border-border">
+                <th className="text-left py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Origem</th>
                 {semanasOrdenadas.map(s => (
-                  <th key={s.id} className="text-right py-2 px-2 font-heading text-muted-foreground">
+                  <th key={s.id} className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">
                     {s.rotulo || `Sem ${s.numero}`}
                   </th>
                 ))}
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Total</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Total</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map(row => {
+              {rows.map((row, ri) => {
                 let total = 0;
                 return (
-                  <tr key={row.label} className="border-b border-border/50">
-                    <td className="py-2 px-2 font-medium">{row.label}</td>
+                  <tr key={row.label} className={`border-b border-[#E5E5E5] ${ri % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
+                    <td className="py-3 px-3 font-medium">{row.label}</td>
                     {semanasOrdenadas.map(s => {
                       const val = row.getData(s.id);
                       total += val;
                       return (
-                        <td key={s.id} className={`text-right py-2 px-2 tabular-nums ${val > 0 ? 'font-medium' : 'text-muted-foreground'}`}>
+                        <td key={s.id} className={`text-right py-3 px-3 tabular-nums ${val > 0 ? 'font-medium' : 'text-muted-foreground'}`}>
                           {formatBRL(val)}
                         </td>
                       );
                     })}
-                    <td className="text-right py-2 px-2 tabular-nums font-bold">{formatBRL(total)}</td>
+                    <td className="text-right py-3 px-3 tabular-nums font-semibold">{formatBRL(total)}</td>
                   </tr>
                 );
               })}
               {/* TOTAL row */}
-              <tr className="border-t-2 border-foreground">
-                <td className="py-2 px-2 font-bold">TOTAL</td>
+              <tr className="bg-[#F0F0F0] border-t-2 border-foreground">
+                <td className="py-3 px-3 font-semibold">TOTAL</td>
                 {semanasOrdenadas.map(s => {
                   const total = rows.reduce((sum, r) => sum + r.getData(s.id), 0);
                   return (
-                    <td key={s.id} className="text-right py-2 px-2 tabular-nums font-bold">{formatBRL(total)}</td>
+                    <td key={s.id} className="text-right py-3 px-3 tabular-nums font-semibold">{formatBRL(total)}</td>
                   );
                 })}
-                <td className="text-right py-2 px-2 tabular-nums font-bold">
+                <td className="text-right py-3 px-3 tabular-nums font-semibold">
                   {formatBRL(semanasOrdenadas.reduce((sum, s) => sum + rows.reduce((rs, r) => rs + r.getData(s.id), 0), 0))}
                 </td>
               </tr>

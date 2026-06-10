@@ -28,12 +28,12 @@ function MoneyCell({ value, onChange }) {
       onChange={e => setRaw(e.target.value)}
       onBlur={handleBlur}
       autoFocus
-      className="h-7 text-xs w-24 text-right"
+      className="h-8 text-[15px] w-28 text-right"
     />
   ) : (
     <span
       onClick={handleFocus}
-      className="cursor-pointer hover:bg-muted px-1 rounded text-xs tabular-nums"
+      className="cursor-pointer hover:bg-muted px-1.5 py-0.5 rounded text-[15px] tabular-nums"
     >
       {formatBRL(value || 0)}
     </span>
@@ -64,51 +64,52 @@ export default function TabelaMultiProjetos({ emp, semanas, projetos, despesasPr
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-heading">Despesas por Projeto</CardTitle>
+      <CardHeader className="pb-3 px-6 pt-6">
+        <CardTitle className="text-[20px] font-heading font-medium">Despesas por Projeto</CardTitle>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <table className="w-full text-xs">
+      <CardContent className="overflow-x-auto px-6 pb-6">
+        <table className="w-full min-w-[600px]">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-2 px-2 font-heading text-muted-foreground">Semana</th>
+            <tr className="border-b-2 border-border">
+              <th className="text-left py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Semana</th>
               {projetos.map(p => (
-                <th key={p.id} className="text-right py-2 px-2 font-heading text-muted-foreground">{p.nome}</th>
+                <th key={p.id} className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">{p.nome}</th>
               ))}
-              <th className="text-right py-2 px-2 font-heading text-muted-foreground">Total</th>
-              <th className="text-right py-2 px-2 font-heading text-muted-foreground">Saldo Acum.</th>
+              <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Total</th>
+              <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Saldo Acum.</th>
             </tr>
           </thead>
           <tbody>
-            {semanas.map(s => (
-              <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30">
-                <td className="py-2 px-2">
-                  <Badge variant="outline" className="text-[10px] font-heading">{s.rotulo || `Sem ${s.numero}`}</Badge>
+            {semanas.map((s, si) => (
+              <tr key={s.id} className={`border-b border-[#E5E5E5] hover:bg-muted/30 ${si % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
+                <td className="py-2 px-3">
+                  <Badge variant="outline" className="text-[13px] font-heading font-medium">{s.rotulo || `Sem ${s.numero}`}</Badge>
                 </td>
                 {projetos.map(p => (
-                  <td key={p.id} className="text-right py-2 px-2">
+                  <td key={p.id} className="text-right py-2 px-3">
                     <MoneyCell
                       value={getDespesa(p.id, s.id)}
                       onChange={(v) => handleChange(p.id, s.id, v)}
                     />
                   </td>
                 ))}
-                <td className="text-right py-2 px-2 font-bold tabular-nums">{formatBRL(getSomaSemana(s.id))}</td>
-                <td className={`text-right py-2 px-2 font-bold tabular-nums ${(acumulados[s.id] || 0) < 0 ? 'text-primary' : ''}`}>
+                <td className="text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5]">{formatBRL(getSomaSemana(s.id))}</td>
+                <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5] ${(acumulados[s.id] || 0) < 0 ? 'text-primary' : ''}`}>
                   {formatBRL(acumulados[s.id] || 0)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+
         {/* Disponível por projeto */}
-        <div className="mt-4 pt-3 border-t border-border">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2">Saldo Disponível por Projeto</p>
+        <div className="mt-6 pt-4 border-t border-border">
+          <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-3">Saldo Disponível por Projeto</p>
           <div className="flex flex-wrap gap-3">
             {projetos.map(p => (
-              <div key={p.id} className="bg-muted rounded px-3 py-2">
-                <p className="text-[10px] text-muted-foreground">{p.nome}</p>
-                <p className="text-sm font-bold font-heading tabular-nums">{formatBRL(p.saldo_disponivel || 0)}</p>
+              <div key={p.id} className="bg-muted rounded-lg px-4 py-3">
+                <p className="text-[13px] text-muted-foreground">{p.nome}</p>
+                <p className="text-[20px] font-medium font-heading tabular-nums mt-0.5">{formatBRL(p.saldo_disponivel || 0)}</p>
               </div>
             ))}
           </div>

@@ -9,7 +9,6 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if (empParts.length === 0) return null;
 
-  // Contas a pagar
   let contasAPagar = 0;
   for (let i = 0; i < Math.min(4, semanas.length); i++) {
     const s = semanas[i];
@@ -31,39 +30,39 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
   const getSocioNome = (id) => socios.find(s => s.id === id)?.nome || '—';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Resumo Valores Aportados */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-heading">Resumo Valores Aportados (Equalização)</CardTitle>
+        <CardHeader className="pb-3 px-6 pt-6">
+          <CardTitle className="text-[20px] font-heading font-medium">Resumo Valores Aportados (Equalização)</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <CardContent className="overflow-x-auto px-6 pb-6">
+          <table className="w-full text-[15px] min-w-[700px]">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2 px-2 font-heading text-muted-foreground">Sócio</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">% Soc.</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Aportado</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Devolvido</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Saldo Dev.</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">% Atual</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Total p/ Eq.</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Aporte Nec.</th>
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Fator</th>
+              <tr className="border-b-2 border-border">
+                <th className="text-left py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Sócio</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">% Soc.</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Aportado</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Devolvido</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Saldo Dev.</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">% Atual</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Total p/ Eq.</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Aporte Nec.</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Fator</th>
               </tr>
             </thead>
             <tbody>
-              {eqComFator.map(e => (
-                <tr key={e.socio_id} className="border-b border-border/50">
-                  <td className="py-2 px-2 font-medium">{getSocioNome(e.socio_id)}</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{e.percentual_sociedade?.toFixed(2)}%</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{formatBRL(e.valor_aportado)}</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{formatBRL(e.valor_devolvido)}</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{formatBRL(e.saldoADevolver)}</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{(e.percentualAtual * 100).toFixed(2)}%</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{formatBRL(e.totalParaEqualizar)}</td>
-                  <td className={`text-right py-2 px-2 tabular-nums font-bold ${e.aporteNecessario < 0 ? 'text-primary' : ''}`}>{formatBRL(e.aporteNecessario)}</td>
-                  <td className="text-right py-2 px-2 tabular-nums">{(e.fatorRateio * 100).toFixed(2)}%</td>
+              {eqComFator.map((e, ei) => (
+                <tr key={e.socio_id} className={`border-b border-[#E5E5E5] ${ei % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
+                  <td className="py-2 px-3 font-medium">{getSocioNome(e.socio_id)}</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{e.percentual_sociedade?.toFixed(2)}%</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.valor_aportado)}</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.valor_devolvido)}</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.saldoADevolver)}</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{(e.percentualAtual * 100).toFixed(2)}%</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.totalParaEqualizar)}</td>
+                  <td className={`text-right py-2 px-3 tabular-nums font-medium bg-[#F5F5F5] ${e.aporteNecessario < 0 ? 'text-primary' : ''}`}>{formatBRL(e.aporteNecessario)}</td>
+                  <td className="text-right py-2 px-3 tabular-nums">{(e.fatorRateio * 100).toFixed(2)}%</td>
                 </tr>
               ))}
             </tbody>
@@ -73,50 +72,50 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
 
       {/* Aportes por Semana */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-heading">Aportes por Semana</CardTitle>
+        <CardHeader className="pb-3 px-6 pt-6">
+          <CardTitle className="text-[20px] font-heading font-medium">Aportes por Semana</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <CardContent className="overflow-x-auto px-6 pb-6">
+          <table className="w-full text-[15px] min-w-[600px]">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2 px-2 font-heading text-muted-foreground">Sócio</th>
+              <tr className="border-b-2 border-border">
+                <th className="text-left py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Sócio</th>
                 {semanas.map(s => (
-                  <th key={s.id} className="text-right py-2 px-2 font-heading text-muted-foreground">
+                  <th key={s.id} className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">
                     {s.rotulo || `Sem ${s.numero}`}
                   </th>
                 ))}
-                <th className="text-right py-2 px-2 font-heading text-muted-foreground">Total</th>
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Total</th>
               </tr>
             </thead>
             <tbody>
-              {eqComFator.map(e => {
+              {eqComFator.map((e, ei) => {
                 let totalSocio = 0;
                 return (
-                  <tr key={e.socio_id} className="border-b border-border/50">
-                    <td className="py-2 px-2 font-medium">{getSocioNome(e.socio_id)}</td>
+                  <tr key={e.socio_id} className={`border-b border-[#E5E5E5] ${ei % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
+                    <td className="py-2 px-3 font-medium">{getSocioNome(e.socio_id)}</td>
                     {semanas.map(s => {
                       const val = aportesSemana[s.id]?.porSocio[e.socio_id] || 0;
                       totalSocio += val;
                       return (
-                        <td key={s.id} className={`text-right py-2 px-2 tabular-nums ${val > 0 ? 'font-medium' : 'text-muted-foreground'}`}>
+                        <td key={s.id} className={`text-right py-2 px-3 tabular-nums ${val > 0 ? 'font-medium' : 'text-muted-foreground'}`}>
                           {formatBRL(val)}
                         </td>
                       );
                     })}
-                    <td className="text-right py-2 px-2 tabular-nums font-bold">{formatBRL(totalSocio)}</td>
+                    <td className="text-right py-2 px-3 tabular-nums font-semibold bg-[#F5F5F5]">{formatBRL(totalSocio)}</td>
                   </tr>
                 );
               })}
               {/* Total row */}
-              <tr className="border-t-2 border-foreground">
-                <td className="py-2 px-2 font-bold">TOTAL</td>
+              <tr className="bg-[#F0F0F0] border-t-2 border-foreground">
+                <td className="py-2 px-3 font-semibold">TOTAL</td>
                 {semanas.map(s => (
-                  <td key={s.id} className="text-right py-2 px-2 tabular-nums font-bold">
+                  <td key={s.id} className="text-right py-2 px-3 tabular-nums font-semibold">
                     {formatBRL(aportesSemana[s.id]?.total || 0)}
                   </td>
                 ))}
-                <td className="text-right py-2 px-2 tabular-nums font-bold">
+                <td className="text-right py-2 px-3 tabular-nums font-semibold bg-[#F5F5F5]">
                   {formatBRL(Object.values(aportesSemana).reduce((sum, a) => sum + a.total, 0))}
                 </td>
               </tr>

@@ -120,32 +120,32 @@ export default function Dashboard() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Calendar className="w-12 h-12 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-heading font-bold mb-2">Nenhum ciclo ativo</h2>
-        <p className="text-muted-foreground text-sm">Vá em Configurações para criar um ciclo.</p>
+        <h2 className="text-[20px] font-heading font-bold mb-2">Nenhum ciclo ativo</h2>
+        <p className="text-muted-foreground text-[15px]">Vá em Configurações para criar um ciclo.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Dashboard</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="font-heading text-xs">{cicloAtivo.nome}</Badge>
-            <span className="text-xs text-muted-foreground">
+          <h1 className="text-[28px] font-heading font-bold">Dashboard</h1>
+          <div className="flex items-center gap-2 mt-1.5">
+            <Badge variant="outline" className="font-heading text-[13px]">{cicloAtivo.nome}</Badge>
+            <span className="text-[13px] text-muted-foreground">
               {semanasOrdenadas.length > 0 && `${semanasOrdenadas[0].rotulo} → ${semanasOrdenadas[semanasOrdenadas.length-1]?.rotulo}`}
             </span>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={handleGerarPDFGeral} className="gap-2">
+        <Button variant="outline" onClick={handleGerarPDFGeral} className="gap-2 text-[15px]">
           <FileDown className="w-4 h-4" />
           Gerar PDF Geral
         </Button>
       </div>
 
       {/* Cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {empAtivos.map(emp => (
           <EmpreendimentoCard
             key={emp.id}

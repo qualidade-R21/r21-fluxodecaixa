@@ -211,7 +211,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
 
   if (success) {
     return (
-      <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+      <div className="flex items-center gap-2 text-[15px] text-green-600 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
         <CheckCircle className="w-4 h-4" />
         Importação realizada com sucesso!
         <button onClick={() => setSuccess(false)} className="ml-auto text-green-400 hover:text-green-600"><X className="w-4 h-4" /></button>
@@ -228,72 +228,72 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     return (
       <Card className="border-2 border-primary/30">
         <CardContent className="pt-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium text-sm">{preview.fileNome}</span>
+              <span className="font-medium text-[15px]">{preview.fileNome}</span>
               <Badge variant={preview.tipo === 'despesas' ? 'destructive' : 'default'}>
                 {preview.tipo === 'despesas' ? 'Despesas' : 'Receitas'}
               </Badge>
               {preview.nomeEmpresa && (
-                <span className="text-xs text-muted-foreground">• {preview.nomeEmpresa}</span>
+                <span className="text-[13px] text-muted-foreground">• {preview.nomeEmpresa}</span>
               )}
             </div>
             <button onClick={() => setPreview(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
           </div>
 
           {preview.fora > 0 && (
-            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-2 mb-2">
-              <AlertTriangle className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-[13px] text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-2 mb-2">
+              <AlertTriangle className="w-3.5 h-3.5" />
               {formatBRL(preview.fora)} fora do período das semanas do ciclo.
             </div>
           )}
           {diffTotal !== null && diffTotal > 1 && (
-            <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
-              <AlertTriangle className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-[13px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
+              <AlertTriangle className="w-3.5 h-3.5" />
               Diferença de {formatBRL(diffTotal)} em relação ao "Total da Empresa" ({formatBRL(preview.totalEmpresa)}) do relatório.
             </div>
           )}
 
-          <table className="w-full text-xs mb-4">
+          <table className="w-full text-[15px] mb-5">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-1.5 px-2 text-muted-foreground">Semana</th>
-                <th className="text-right py-1.5 px-2 text-muted-foreground">Extraído</th>
-                <th className="text-right py-1.5 px-2 text-muted-foreground">Atual</th>
-                <th className="text-right py-1.5 px-2 text-muted-foreground">Diferença</th>
+              <tr className="border-b-2 border-border">
+                <th className="text-left py-3 px-3 text-[13px] uppercase tracking-wide text-[#4A4A4A] font-medium">Semana</th>
+                <th className="text-right py-3 px-3 text-[13px] uppercase tracking-wide text-[#4A4A4A] font-medium">Extraído</th>
+                <th className="text-right py-3 px-3 text-[13px] uppercase tracking-wide text-[#4A4A4A] font-medium">Atual</th>
+                <th className="text-right py-3 px-3 text-[13px] uppercase tracking-wide text-[#4A4A4A] font-medium">Diferença</th>
               </tr>
             </thead>
             <tbody>
-              {semanas.map(s => {
+              {semanas.map((s, si) => {
                 const extraido = preview.porSemana[s.id] || 0;
                 const atual = getLancAtual(s.id, fieldAtual);
                 const d = extraido - atual;
                 return (
-                  <tr key={s.id} className="border-b border-border/40">
-                    <td className="py-1.5 px-2 font-medium">{getSemanaLabel(s.id)}</td>
-                    <td className="text-right py-1.5 px-2 tabular-nums">{formatBRL(extraido)}</td>
-                    <td className="text-right py-1.5 px-2 tabular-nums text-muted-foreground">{formatBRL(atual)}</td>
-                    <td className={`text-right py-1.5 px-2 tabular-nums font-medium ${d !== 0 ? (d > 0 ? 'text-green-600' : 'text-primary') : 'text-muted-foreground'}`}>
+                  <tr key={s.id} className={`border-b border-[#E5E5E5] ${si % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
+                    <td className="py-2 px-3 font-medium">{getSemanaLabel(s.id)}</td>
+                    <td className="text-right py-2 px-3 tabular-nums">{formatBRL(extraido)}</td>
+                    <td className="text-right py-2 px-3 tabular-nums text-muted-foreground">{formatBRL(atual)}</td>
+                    <td className={`text-right py-2 px-3 tabular-nums font-medium ${d !== 0 ? (d > 0 ? 'text-green-600' : 'text-primary') : 'text-muted-foreground'}`}>
                       {d !== 0 ? (d > 0 ? '+' : '') + formatBRL(d) : '—'}
                     </td>
                   </tr>
                 );
               })}
-              <tr className="border-t-2 border-foreground">
-                <td className="py-1.5 px-2 font-bold">TOTAL</td>
-                <td className="text-right py-1.5 px-2 tabular-nums font-bold">{formatBRL(preview.totalExtraido)}</td>
-                <td className="text-right py-1.5 px-2 tabular-nums font-bold text-muted-foreground">{formatBRL(totalAtual)}</td>
-                <td className={`text-right py-1.5 px-2 tabular-nums font-bold ${diff !== 0 ? (diff > 0 ? 'text-green-600' : 'text-primary') : 'text-muted-foreground'}`}>
+              <tr className="bg-[#F0F0F0] border-t-2 border-foreground">
+                <td className="py-2 px-3 font-semibold">TOTAL</td>
+                <td className="text-right py-2 px-3 tabular-nums font-semibold">{formatBRL(preview.totalExtraido)}</td>
+                <td className="text-right py-2 px-3 tabular-nums font-semibold text-muted-foreground">{formatBRL(totalAtual)}</td>
+                <td className={`text-right py-2 px-3 tabular-nums font-semibold ${diff !== 0 ? (diff > 0 ? 'text-green-600' : 'text-primary') : 'text-muted-foreground'}`}>
                   {diff !== 0 ? (diff > 0 ? '+' : '') + formatBRL(diff) : '—'}
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPreview(null)}>Cancelar</Button>
-            <Button size="sm" onClick={handleConfirm} disabled={loading}>
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="outline" className="text-[15px]" onClick={() => setPreview(null)}>Cancelar</Button>
+            <Button className="text-[15px]" onClick={handleConfirm} disabled={loading}>
               {loading ? 'Gravando...' : 'Confirmar Importação'}
             </Button>
           </div>
@@ -321,20 +321,20 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
           onChange={e => { if (e.target.files[0]) handleFile(e.target.files[0]); }}
         />
         {loading ? (
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 text-[15px] text-muted-foreground">
             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             Processando relatório...
           </div>
         ) : (
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 text-[15px] text-muted-foreground">
             <Upload className="w-4 h-4" />
             <span>Arrastar ou clicar para importar relatório Sienge (PDF ou Excel)</span>
           </div>
         )}
       </div>
       {error && (
-        <div className="flex items-center gap-2 text-xs text-primary mt-2">
-          <AlertTriangle className="w-3 h-3" /> {error}
+        <div className="flex items-center gap-2 text-[13px] text-primary mt-2">
+          <AlertTriangle className="w-3.5 h-3.5" /> {error}
         </div>
       )}
     </div>

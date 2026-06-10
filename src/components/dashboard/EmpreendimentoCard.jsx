@@ -9,59 +9,57 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
 
   return (
     <Link to={`/empreendimento/${emp.id}`}>
-      <Card className={`group hover:shadow-md transition-all duration-200 cursor-pointer ${
-      temSaldoNegativo ? 'border-2 border-primary' : 'border border-border'}`
-      }>
-        <CardHeader className="pb-3">
+      <Card className={`group hover:shadow-lg transition-all duration-200 cursor-pointer h-full ${
+        temSaldoNegativo ? 'border-2 border-primary' : 'border border-border'
+      }`}>
+        <CardHeader className="pb-4 p-6">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className={`w-9 h-9 rounded flex items-center justify-center ${
-              temSaldoNegativo ? 'bg-primary' : 'bg-foreground'}`
-              }>
-                <Building2 className="w-4 h-4 text-primary-foreground" />
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${
+                temSaldoNegativo ? 'bg-primary' : 'bg-foreground'
+              }`}>
+                <Building2 className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-base font-heading font-bold">{emp.nome}</CardTitle>
-                <span className="text-xs text-muted-foreground capitalize">{emp.tipo_fluxo.replace('_', ' ')}</span>
+                <CardTitle className="text-[16px] font-heading font-bold leading-tight">{emp.nome}</CardTitle>
+                <span className="text-[13px] text-muted-foreground capitalize">{emp.tipo_fluxo.replace('_', ' ')}</span>
               </div>
             </div>
-            {temSaldoNegativo &&
-            <AlertTriangle className="w-4 h-4 text-primary" />
-            }
+            {temSaldoNegativo && <AlertTriangle className="w-5 h-5 text-primary shrink-0" />}
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-3">
+        <CardContent className="pt-0 px-6 pb-6">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">SALDO ATUAL</p>
-              <p className={`font-bold font-heading text-base ${saldoAtual < 0 ? 'text-primary' : ''}`}>
+              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Saldo Atual</p>
+              <p className={`text-[20px] font-medium font-heading tabular-nums leading-tight ${saldoAtual < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAtual)}
               </p>
             </div>
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">PROJEÇÃO FINAL</p>
-              <p className={`font-bold font-heading text-base ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
+              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Projeção Final</p>
+              <p className={`text-[20px] font-medium font-heading tabular-nums leading-tight ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">CONTAS A PAGAR</p>
-              <p className="font-bold font-heading text-base">{formatBRL(contasAPagar)}</p>
+              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Contas a Pagar</p>
+              <p className="text-[20px] font-medium font-heading tabular-nums leading-tight">{formatBRL(contasAPagar)}</p>
             </div>
-            {showAporte &&
-            <div>
-                <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">APORTE NEC.</p>
-                <p className={`font-bold font-heading text-base ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
+            {showAporte && (
+              <div>
+                <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Aporte Nec.</p>
+                <p className={`text-[20px] font-medium font-heading tabular-nums leading-tight ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
                   {formatBRL(aporteNecessario)}
                 </p>
               </div>
-            }
+            )}
           </div>
-          <div className="mt-3 flex items-center justify-end text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-            Ver detalhes <ArrowRight className="w-3 h-3 ml-1" />
+          <div className="mt-4 flex items-center justify-end text-[13px] text-muted-foreground group-hover:text-foreground transition-colors">
+            Ver detalhes <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </div>
         </CardContent>
       </Card>
-    </Link>);
-
+    </Link>
+  );
 }

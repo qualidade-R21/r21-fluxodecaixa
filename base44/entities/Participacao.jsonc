@@ -1,0 +1,30 @@
+{
+  "name": "Participacao",
+  "type": "object",
+  "properties": {
+    "socio_id": {
+      "type": "string"
+    },
+    "empreendimento_id": {
+      "type": "string"
+    },
+    "percentual_sociedade": {
+      "type": "number",
+      "description": "Percentual de sociedade"
+    },
+    "valor_aportado": {
+      "type": "number",
+      "default": 0,
+      "description": "Acumulado hist\u00f3rico"
+    },
+    "valor_devolvido": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "socio_id",
+    "empreendimento_id",
+    "percentual_sociedade"
+  ]
+}

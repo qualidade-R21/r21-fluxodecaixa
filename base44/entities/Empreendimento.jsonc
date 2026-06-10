@@ -1,0 +1,77 @@
+{
+  "name": "Empreendimento",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do empreendimento"
+    },
+    "nome_sienge": {
+      "type": "string",
+      "description": "Nome no ERP Sienge para mapeamento autom\u00e1tico na importa\u00e7\u00e3o"
+    },
+    "tipo_fluxo": {
+      "type": "string",
+      "enum": [
+        "simples",
+        "com_aportes",
+        "multi_projetos",
+        "master"
+      ],
+      "description": "Tipo de fluxo de caixa"
+    },
+    "tem_receita": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o empreendimento tem receitas"
+    },
+    "tem_saldo_aplicado": {
+      "type": "boolean",
+      "default": false
+    },
+    "tem_saldo_decoracao": {
+      "type": "boolean",
+      "default": false,
+      "description": "Saldo Decora\u00e7\u00e3o (Bradesco)"
+    },
+    "tem_inadimplencia": {
+      "type": "boolean",
+      "default": false
+    },
+    "despesa_dividida_r21": {
+      "type": "boolean",
+      "default": false,
+      "description": "Apenas GTR - colunas separadas de despesa GTR e R21"
+    },
+    "margem_seguranca_semana1": {
+      "type": "number",
+      "default": 0
+    },
+    "margem_seguranca_demais": {
+      "type": "number",
+      "default": 0
+    },
+    "margem_aporte_total": {
+      "type": "number",
+      "default": 0
+    },
+    "banco_principal": {
+      "type": "string"
+    },
+    "observacoes": {
+      "type": "string"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true
+    },
+    "ordem_exibicao": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "nome",
+    "tipo_fluxo"
+  ]
+}

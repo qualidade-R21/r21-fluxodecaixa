@@ -1,0 +1,37 @@
+{
+  "name": "RegistroImportacao",
+  "type": "object",
+  "properties": {
+    "empreendimento_id": {
+      "type": "string"
+    },
+    "ciclo_id": {
+      "type": "string"
+    },
+    "nome_arquivo": {
+      "type": "string"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "despesas",
+        "receitas"
+      ]
+    },
+    "valores_lancados": {
+      "type": "object",
+      "description": "JSON com valores por semana"
+    },
+    "total_extraido": {
+      "type": "number"
+    },
+    "usuario": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "empreendimento_id",
+    "nome_arquivo",
+    "tipo"
+  ]
+}

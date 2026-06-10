@@ -1,0 +1,21 @@
+{
+  "name": "Ciclo",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Ex: Maio-Junho 2026"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "encerrado"
+      ],
+      "default": "ativo"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

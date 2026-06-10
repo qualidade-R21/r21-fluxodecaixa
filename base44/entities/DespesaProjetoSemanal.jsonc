@@ -1,0 +1,20 @@
+{
+  "name": "DespesaProjetoSemanal",
+  "type": "object",
+  "properties": {
+    "projeto_id": {
+      "type": "string"
+    },
+    "semana_id": {
+      "type": "string"
+    },
+    "valor_despesa": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "projeto_id",
+    "semana_id"
+  ]
+}

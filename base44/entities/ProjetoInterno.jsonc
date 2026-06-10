@@ -1,0 +1,21 @@
+{
+  "name": "ProjetoInterno",
+  "type": "object",
+  "properties": {
+    "empreendimento_pai_id": {
+      "type": "string",
+      "description": "ID do empreendimento pai (Grupo GC)"
+    },
+    "nome": {
+      "type": "string"
+    },
+    "saldo_disponivel": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "empreendimento_pai_id",
+    "nome"
+  ]
+}

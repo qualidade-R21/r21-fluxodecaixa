@@ -1,0 +1,41 @@
+{
+  "name": "SaldoEmpreendimento",
+  "type": "object",
+  "properties": {
+    "empreendimento_id": {
+      "type": "string"
+    },
+    "ciclo_id": {
+      "type": "string"
+    },
+    "saldo_atual": {
+      "type": "number",
+      "default": 0
+    },
+    "saldo_aplicado": {
+      "type": "number",
+      "default": 0
+    },
+    "saldo_atual_r21": {
+      "type": "number",
+      "default": 0,
+      "description": "S\u00f3 GTR"
+    },
+    "saldo_decoracao": {
+      "type": "number",
+      "default": 0,
+      "description": "S\u00f3 quando tem_saldo_decoracao"
+    },
+    "inadimplencia": {
+      "type": "number",
+      "default": 0
+    },
+    "observacoes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "empreendimento_id",
+    "ciclo_id"
+  ]
+}

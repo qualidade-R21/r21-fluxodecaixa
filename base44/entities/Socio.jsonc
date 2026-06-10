@@ -1,0 +1,17 @@
+{
+  "name": "Socio",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string"
+    },
+    "vinculado_a_ricardo": {
+      "type": "boolean",
+      "default": false,
+      "description": "S\u00f3cios cujos aportes entram na consolida\u00e7\u00e3o Aportes Ricardo"
+    }
+  },
+  "required": [
+    "nome"
+  ]
+}

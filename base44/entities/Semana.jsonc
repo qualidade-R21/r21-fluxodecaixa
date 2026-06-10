@@ -1,0 +1,32 @@
+{
+  "name": "Semana",
+  "type": "object",
+  "properties": {
+    "ciclo_id": {
+      "type": "string",
+      "description": "ID do Ciclo"
+    },
+    "numero": {
+      "type": "number",
+      "description": "1 a 6"
+    },
+    "data_inicio": {
+      "type": "string",
+      "format": "date"
+    },
+    "data_fim": {
+      "type": "string",
+      "format": "date"
+    },
+    "rotulo": {
+      "type": "string",
+      "description": "Ex: 09/05 - 15/05"
+    }
+  },
+  "required": [
+    "ciclo_id",
+    "numero",
+    "data_inicio",
+    "data_fim"
+  ]
+}

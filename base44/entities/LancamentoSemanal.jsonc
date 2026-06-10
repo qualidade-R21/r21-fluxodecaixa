@@ -1,0 +1,42 @@
+{
+  "name": "LancamentoSemanal",
+  "type": "object",
+  "properties": {
+    "empreendimento_id": {
+      "type": "string"
+    },
+    "semana_id": {
+      "type": "string"
+    },
+    "despesa_consolidada": {
+      "type": "number",
+      "default": 0
+    },
+    "despesa_prevista": {
+      "type": "number",
+      "default": 0
+    },
+    "despesa_r21": {
+      "type": "number",
+      "default": 0,
+      "description": "S\u00f3 quando despesa_dividida_r21 = true"
+    },
+    "despesa_afac": {
+      "type": "number",
+      "default": 0,
+      "description": "Campo calculado - vem dos aportes de outro empreendimento"
+    },
+    "receita_consolidada": {
+      "type": "number",
+      "default": 0
+    },
+    "receita_prevista": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "empreendimento_id",
+    "semana_id"
+  ]
+}

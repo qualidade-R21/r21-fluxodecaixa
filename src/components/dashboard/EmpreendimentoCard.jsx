@@ -33,19 +33,19 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-base">SALDO ATUAL</p>
-              <p className={`text-sm font-bold font-heading ${saldoAtual < 0 ? 'text-primary' : ''}`}>
+              <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">SALDO ATUAL</p>
+              <p className={`font-bold font-heading text-base ${saldoAtual < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAtual)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Projeção Final</p>
+              <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">PROJEÇÃO FINAL</p>
               <p className={`text-sm font-bold font-heading ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Contas a Pagar</p>
+              <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">CONTAS A PAGAR</p>
               <p className="text-sm font-bold font-heading">{formatBRL(contasAPagar)}</p>
             </div>
             {showAporte &&

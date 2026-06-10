@@ -29,27 +29,27 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
           </div>
         </CardHeader>
         <CardContent className="pt-0 px-6 pb-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Saldo Atual</p>
-              <p className={`text-[20px] font-medium font-heading tabular-nums leading-tight ${saldoAtual < 0 ? 'text-primary' : ''}`}>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Saldo Atual</p>
+              <p className={`text-[15px] font-medium font-heading tabular-nums leading-tight break-all ${saldoAtual < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAtual)}
               </p>
             </div>
-            <div>
-              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Projeção Final</p>
-              <p className={`text-[20px] font-medium font-heading tabular-nums leading-tight ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Projeção Final</p>
+              <p className={`text-[15px] font-medium font-heading tabular-nums leading-tight break-all ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
-            <div>
-              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Contas a Pagar</p>
-              <p className="text-[20px] font-medium font-heading tabular-nums leading-tight">{formatBRL(contasAPagar)}</p>
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Contas a Pagar</p>
+              <p className="text-[15px] font-medium font-heading tabular-nums leading-tight break-all">{formatBRL(contasAPagar)}</p>
             </div>
             {showAporte && (
-              <div>
-                <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Aporte Nec.</p>
-                <p className={`text-[20px] font-medium font-heading tabular-nums leading-tight ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Aporte Nec.</p>
+                <p className={`text-[15px] font-medium font-heading tabular-nums leading-tight break-all ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
                   {formatBRL(aporteNecessario)}
                 </p>
               </div>

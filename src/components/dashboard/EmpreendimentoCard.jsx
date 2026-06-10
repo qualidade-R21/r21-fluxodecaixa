@@ -33,24 +33,24 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">SALDO ATUAL</p>
+              <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">SALDO ATUAL</p>
               <p className={`font-bold font-heading text-base ${saldoAtual < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAtual)}
               </p>
             </div>
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">PROJEÇÃO FINAL</p>
+              <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">PROJEÇÃO FINAL</p>
               <p className={`font-bold font-heading text-base ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
             <div>
-              <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">CONTAS A PAGAR</p>
+              <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">CONTAS A PAGAR</p>
               <p className="font-bold font-heading text-base">{formatBRL(contasAPagar)}</p>
             </div>
             {showAporte &&
             <div>
-                <p className="uppercase tracking-wider text-muted-foreground font-medium text-sm">APORTE NEC.</p>
+                <p className="uppercase tracking-wider text-muted-foreground font-medium text-xs">APORTE NEC.</p>
                 <p className={`font-bold font-heading text-base ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
                   {formatBRL(aporteNecessario)}
                 </p>

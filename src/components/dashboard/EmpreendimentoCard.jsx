@@ -21,7 +21,7 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
                 <Building2 className="w-4 h-4 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-sm font-heading font-bold">{emp.nome}</CardTitle>
+                <CardTitle className="text-base font-heading font-bold">{emp.nome}</CardTitle>
                 <span className="text-xs text-muted-foreground capitalize">{emp.tipo_fluxo.replace('_', ' ')}</span>
               </div>
             </div>

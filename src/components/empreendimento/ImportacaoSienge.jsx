@@ -6,100 +6,98 @@ import { Upload, CheckCircle, X, AlertTriangle, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatBRL } from '@/lib/calculos';
 import { useQueryClient } from '@tanstack/react-query';
+import * as pdfjsLib from 'pdfjs-dist';
 
-function parseValor(str) {
-  if (!str) return null;
-  const cleaned = str.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
-  const v = parseFloat(cleaned);
-  return isNaN(v) ? null : v;
+// Configura o worker do pdfjs
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
+
+// PASSO 1: Reconstruir linhas de texto respeitando a rotação da página
+async function pdfLines(arrayBuffer) {
+  const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const lines = [];
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p);
+    const vp = page.getViewport({ scale: 1 });
+    const tc = await page.getTextContent();
+    // CRÍTICO: converter as coordenadas pelo viewport — isso corrige a rotação
+    const pts = tc.items.map(it => {
+      const t = pdfjsLib.Util.transform(vp.transform, it.transform);
+      return { s: it.str, x: t[4], y: t[5] };
+    });
+    pts.sort((a, b) => a.y - b.y || a.x - b.x);
+    let row = [], ly = null;
+    pts.forEach(pt => {
+      if (ly === null || Math.abs(pt.y - ly) <= 2.5) { row.push(pt); if (ly === null) ly = pt.y; }
+      else {
+        lines.push(row.sort((a, b) => a.x - b.x).map(i => i.s).join(' ').replace(/\s+/g, ' ').trim());
+        row = [pt]; ly = pt.y;
+      }
+    });
+    if (row.length) lines.push(row.sort((a, b) => a.x - b.x).map(i => i.s).join(' ').replace(/\s+/g, ' ').trim());
+  }
+  return lines;
 }
 
-function parseSiengeText(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  
-  let tipo = null;
-  let nomeEmpresa = null;
+// PASSO 2: Extrair totais diários e agrupar por semana do ciclo
+function parseSienge(lines, semanasDoCiclo) {
+  const brnum = s => parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  const txt = lines.join('\n');
+  const tipo = /contas a pagar/i.test(txt) ? 'despesas'
+             : /contas a receber/i.test(txt) ? 'receitas' : null;
+
+  // No relatório de despesas a data vem do cabeçalho "Data de vencimento";
+  // no de receitas, cada lançamento começa com a própria data.
+  const anchor = /Data de vencimento/.test(txt);
+  let cur = null;
+  const daily = {};
   let totalEmpresa = null;
-  const porData = {};
+  let nomeEmpresa = null;
 
-  const reEmpresa = /empresa\s*\d+\s*[-–]\s*(.+)/i;
-  const reTotalDia = /total\s+do\s+dia/i;
-  const reTotalEmpresa = /total\s+da\s+empresa/i;
-  const reData = /^\d{2}\/\d{2}\/\d{4}$/;
-
-  let dataAtual = null;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (/contas\s+a\s+pagar/i.test(line)) tipo = 'despesas';
-    else if (/contas\s+a\s+receber/i.test(line)) tipo = 'receitas';
-
-    const mEmp = line.match(reEmpresa);
+  lines.forEach(l => {
+    // Captura nome da empresa
+    const mEmp = l.match(/empresa\s*\d+\s*[-–]\s*(.+)/i);
     if (mEmp) nomeEmpresa = mEmp[1].trim();
 
-    if (reData.test(line)) {
-      dataAtual = line;
+    // Captura total da empresa (último número da linha)
+    if (/total\s+da\s+empresa/i.test(l)) {
+      const ns = l.match(/[\d.]*\d,\d{2}/g);
+      if (ns) totalEmpresa = brnum(ns[ns.length - 1]);
     }
 
-    if (reTotalEmpresa.test(line)) {
-      // find last numeric token in this line or next few lines
-      const nums = line.match(/[\d.,]+/g) || [];
-      const next = lines[i + 1] || '';
-      const numsNext = next.match(/[\d.,]+/g) || [];
-      const allNums = [...nums, ...numsNext];
-      for (let j = allNums.length - 1; j >= 0; j--) {
-        const v = parseValor(allNums[j]);
-        if (v !== null && v > 0) { totalEmpresa = v; break; }
-      }
+    // Data de vencimento (despesas)
+    let m = l.match(/Data de vencimento\s*:?\s*(\d{2}\/\d{2}\/\d{4})/);
+    if (m) { cur = m[1]; return; }
+
+    // Data inline (receitas)
+    if (!anchor) {
+      m = l.match(/^(\d{2}\/\d{2}\/\d{4})\s(?!-\s*\d{2}:)/); // ignora rodapé com hora
+      if (m) cur = m[1];
     }
 
-    if (reTotalDia.test(line) && dataAtual) {
-      // Extract last numeric value in this line
-      const nums = line.match(/[\d.,]+/g) || [];
-      // also check next line
-      let valorDia = null;
-      for (let j = nums.length - 1; j >= 0; j--) {
-        const v = parseValor(nums[j]);
-        if (v !== null && v > 0) { valorDia = v; break; }
-      }
-      if (valorDia === null) {
-        const nextLine = lines[i + 1] || '';
-        const nextNums = nextLine.match(/[\d.,]+/g) || [];
-        for (let j = nextNums.length - 1; j >= 0; j--) {
-          const v = parseValor(nextNums[j]);
-          if (v !== null && v > 0) { valorDia = v; break; }
-        }
-      }
-      if (valorDia !== null) {
-        porData[dataAtual] = (porData[dataAtual] || 0) + valorDia;
-      }
-    }
-  }
-
-  return { tipo, nomeEmpresa, totalEmpresa, porData };
-}
-
-function agruparPorSemana(porData, semanas) {
-  const porSemana = {};
-  semanas.forEach(s => { porSemana[s.id] = 0; });
-
-  Object.entries(porData).forEach(([dataStr, valor]) => {
-    const [d, m, a] = dataStr.split('/').map(Number);
-    const data = new Date(a, m - 1, d);
-    const semana = semanas.find(s => {
-      const ini = new Date(s.data_inicio);
-      const fim = new Date(s.data_fim);
-      // normalize to date only
-      ini.setHours(0,0,0,0); fim.setHours(23,59,59,999); data.setHours(12,0,0,0);
-      return data >= ini && data <= fim;
-    });
-    if (semana) {
-      porSemana[semana.id] = (porSemana[semana.id] || 0) + valor;
+    // Total do dia — último número = coluna Total líquida
+    if (/^Total do dia/i.test(l) && cur) {
+      const ns = l.match(/[\d.]*\d,\d{2}/g);
+      if (ns) daily[cur] = (daily[cur] || 0) + brnum(ns[ns.length - 1]);
     }
   });
 
-  return porSemana;
+  // Agrupar cada data na semana do ciclo
+  const sem = semanasDoCiclo.map(() => 0);
+  let fora = 0;
+  Object.keys(daily).forEach(k => {
+    const [d, mo, y] = k.split('/').map(Number);
+    const dt = new Date(y, mo - 1, d);
+    let hit = false;
+    semanasDoCiclo.forEach((w, i) => {
+      if (dt >= w.inicio && dt <= w.fim) { sem[i] += daily[k]; hit = true; }
+    });
+    if (!hit) fora += daily[k];
+  });
+
+  return { tipo, nomeEmpresa, totalEmpresa, sem, fora };
 }
 
 export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, onImported }) {
@@ -118,60 +116,36 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     setLoading(true);
 
     try {
-      // Upload to get url, then extract
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      
-      const ext = file.name.split('.').pop().toLowerCase();
-      const isCsv = ext === 'csv';
-      
-      // Use LLM to extract data from the document
-      const prompt = `Você é um extrator de dados de relatórios financeiros do sistema Sienge.
-Analise o documento e extraia:
-1. O tipo do relatório: "despesas" se título for "Contas a Pagar", "receitas" se for "Contas a Receber"
-2. O nome da empresa no cabeçalho (padrão: "Empresa N - Nome..." ou "EmpresaN - Nome...")
-3. Para cada data de vencimento, o valor do "Total do dia" (último valor numérico nessa linha)
-4. O "Total da empresa" geral do relatório
-5. Somar valores de datas repetidas (podem ocorrer em quebras de página)
+      const arrayBuffer = await file.arrayBuffer();
 
-Retorne JSON com:
-{
-  "tipo": "despesas" ou "receitas",
-  "nome_empresa": "string",
-  "total_empresa": number,
-  "por_data": { "DD/MM/YYYY": number, ... }
-}`;
+      // Monta estrutura de semanas para o parser (objetos Date para comparação)
+      const semanasDoCiclo = semanas.map(s => ({
+        id: s.id,
+        inicio: new Date(s.data_inicio + 'T00:00:00'),
+        fim: new Date(s.data_fim + 'T23:59:59'),
+      }));
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            tipo: { type: 'string' },
-            nome_empresa: { type: 'string' },
-            total_empresa: { type: 'number' },
-            por_data: { type: 'object' }
-          }
-        }
-      });
+      const lines = await pdfLines(arrayBuffer);
+      const { tipo, nomeEmpresa, totalEmpresa, sem, fora } = parseSienge(lines, semanasDoCiclo);
 
-      const { tipo, nome_empresa, total_empresa, por_data } = result;
-
-      if (!tipo || !por_data) {
-        setError('Não foi possível identificar o tipo do relatório ou extrair os dados. Verifique se é um relatório Sienge válido.');
+      if (!tipo) {
+        setError('Não foi possível identificar o tipo do relatório. Verifique se é um relatório Sienge de Contas a Pagar ou Contas a Receber.');
         setLoading(false);
         return;
       }
 
-      const porSemana = agruparPorSemana(por_data || {}, semanas);
-      const totalExtraido = Object.values(porSemana).reduce((s, v) => s + v, 0);
+      // Montar porSemana por id
+      const porSemana = {};
+      semanas.forEach((s, i) => { porSemana[s.id] = sem[i] || 0; });
+      const totalExtraido = sem.reduce((a, b) => a + b, 0) + fora;
 
       setPreview({
         tipo,
-        nomeEmpresa: nome_empresa,
-        totalEmpresa: total_empresa,
+        nomeEmpresa,
+        totalEmpresa,
         totalExtraido,
         porSemana,
+        fora,
         fileNome: file.name
       });
     } catch (e) {
@@ -268,6 +242,12 @@ Retorne JSON com:
             <button onClick={() => setPreview(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
           </div>
 
+          {preview.fora > 0 && (
+            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded px-3 py-2 mb-2">
+              <AlertTriangle className="w-3 h-3" />
+              {formatBRL(preview.fora)} fora do período das semanas do ciclo.
+            </div>
+          )}
           {diffTotal !== null && diffTotal > 1 && (
             <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
               <AlertTriangle className="w-3 h-3" />

@@ -5,6 +5,8 @@ import EmpreendimentoCard from '@/components/dashboard/EmpreendimentoCard';
 import SaldoChart from '@/components/dashboard/SaldoChart';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from 'lucide-react';
+import { useAfacSync } from '@/lib/useAfacSync';
+import { useSocios, useParticipacoes } from '@/lib/useFluxoData';
 
 export default function Dashboard() {
   const { data: empreendimentos } = useEmpreendimentos();
@@ -14,6 +16,8 @@ export default function Dashboard() {
   const { data: lancamentos } = useLancamentos(cicloAtivo?.id, semanaIds);
   const { data: saldos } = useSaldos(cicloAtivo?.id);
   const { data: despesasProjetos } = useDespesasProjetos(semanaIds);
+  const { data: socios } = useSocios();
+  const { data: participacoes } = useParticipacoes();
 
   // Fetch all projetos internos
   const { data: allProjetos } = useProjetosInternos(
@@ -27,6 +31,18 @@ export default function Dashboard() {
   const empAtivos = useMemo(() => 
     empreendimentos.filter(e => e.ativo !== false), [empreendimentos]
   );
+
+  // Sincroniza despesa_afac do RIC e GTR automaticamente
+  useAfacSync({
+    empreendimentos: empAtivos,
+    lancamentos,
+    saldos,
+    semanas: semanasOrdenadas,
+    socios,
+    participacoes,
+    projetos: allProjetos,
+    despesasProjetos,
+  });
 
   // Pre-compute data per empreendimento
   const empData = useMemo(() => {

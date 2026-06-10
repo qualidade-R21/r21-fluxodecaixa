@@ -7,7 +7,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
   if (emp.tipo_fluxo !== 'com_aportes' && emp.tipo_fluxo !== 'multi_projetos') return null;
 
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
-  if (empParts.length === 0) return <p className="text-xs text-muted-foreground">Nenhuma participação cadastrada.</p>;
+  if (empParts.length === 0) return null;
 
   // Contas a pagar
   let contasAPagar = 0;

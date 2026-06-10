@@ -6,6 +6,7 @@ import TabelaSemanas from '@/components/empreendimento/TabelaSemanas';
 import TabelaMultiProjetos from '@/components/empreendimento/TabelaMultiProjetos';
 import Indicadores from '@/components/empreendimento/Indicadores';
 import AportesSection from '@/components/empreendimento/AportesSection';
+import ImportacaoSienge from '@/components/empreendimento/ImportacaoSienge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -100,6 +101,14 @@ export default function Empreendimento() {
         saldoEmp={saldoEmp}
         contasAPagar={contasAPagar}
         aporteNecessario={aporteNecessario}
+        cicloId={cicloAtivo?.id}
+      />
+
+      {/* Importação Sienge */}
+      <ImportacaoSienge
+        emp={emp}
+        semanas={semanasOrdenadas}
+        lancamentos={empLancs}
         cicloId={cicloAtivo?.id}
       />
 

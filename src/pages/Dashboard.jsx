@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import EmpreendimentoCard from '@/components/dashboard/EmpreendimentoCard';
 import SaldoChart from '@/components/dashboard/SaldoChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Archive, Calendar, FileDown } from 'lucide-react';
+import { Archive, Calendar, FileDown, PlusCircle } from 'lucide-react';
+import NovoCicloModal from '@/components/dashboard/NovoCicloModal';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAfacSync } from '@/lib/useAfacSync';
@@ -104,6 +105,7 @@ export default function Dashboard() {
   }, [empData]);
 
   const queryClient = useQueryClient();
+  const [novoCicloOpen, setNovoCicloOpen] = useState(false);
 
   const handleArquivar = async () => {
     try {
@@ -156,6 +158,10 @@ export default function Dashboard() {
             <Archive className="w-4 h-4" />
             Arquivar versão da semana
           </Button>
+          <Button onClick={() => setNovoCicloOpen(true)} className="gap-2 text-[15px] bg-[#AD0000] hover:bg-[#8B0000] text-white">
+            <PlusCircle className="w-4 h-4" />
+            Novo Ciclo
+          </Button>
           <Button variant="outline" onClick={handleGerarPDFGeral} className="gap-2 text-[15px]">
             <FileDown className="w-4 h-4" />
             Gerar PDF Geral
@@ -183,6 +189,13 @@ export default function Dashboard() {
         empreendimentos={empAtivos}
         semanas={semanasOrdenadas}
         acumuladosPorEmp={acumuladosPorEmp}
+      />
+
+      <NovoCicloModal
+        open={novoCicloOpen}
+        onOpenChange={setNovoCicloOpen}
+        cicloAtivo={cicloAtivo}
+        dataInicioAtual={semanasOrdenadas[0]?.data_inicio}
       />
     </div>
   );

@@ -14,7 +14,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
     const s = semanas[i];
     const lanc = lancamentos.find(l => l.semana_id === s.id && l.empreendimento_id === emp.id) || {};
     const despP = despesasPorSemana?.[s.id] || 0;
-    contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_afac || 0) + despP;
+    contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0) + despP;
   }
 
   let saldoAtual = saldoEmp?.saldo_atual || 0;

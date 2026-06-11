@@ -16,7 +16,7 @@ function computeAportes(emp, empLancs, saldoEmp, semanas, participacoes, despPor
     const s = semanas[i];
     const lanc = empLancs.find(l => l.semana_id === s.id) || {};
     const dp = despPorSemana[s.id] || 0;
-    contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_afac || 0) + dp;
+    contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0) + dp;
   }
 
   let saldoAtual = saldoEmp?.saldo_atual || 0;

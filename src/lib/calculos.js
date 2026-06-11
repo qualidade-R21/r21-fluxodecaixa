@@ -54,7 +54,7 @@ export function calcContasAPagar(lancamentos, semanasOrdenadas, despesasProjetos
     const semana = semanasOrdenadas[i];
     const lanc = lancamentos.find(l => l.semana_id === semana.id) || {};
     const despProjetos = despesasProjetosPorSemana[semana.id] || 0;
-    total += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_afac || 0) + despProjetos;
+    total += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0) + despProjetos;
   }
   return total;
 }

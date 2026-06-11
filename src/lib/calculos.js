@@ -47,10 +47,11 @@ export function calcSaldosAcumulados(lancamentos, empreendimento, saldoEmp, sema
   return acumulados;
 }
 
-// C) Contas a Pagar (Mês Atual) - semanas 1 a 4
-export function calcContasAPagar(lancamentos, semanasOrdenadas, despesasProjetosPorSemana = {}) {
+// C) Contas a Pagar (Mês Atual) - semanas 1 a N
+export function calcContasAPagar(lancamentos, semanasOrdenadas, despesasProjetosPorSemana = {}, numSemanas = 4) {
   let total = 0;
-  for (let i = 0; i < Math.min(4, semanasOrdenadas.length); i++) {
+  const limite = Math.min(numSemanas, semanasOrdenadas.length);
+  for (let i = 0; i < limite; i++) {
     const semana = semanasOrdenadas[i];
     const lanc = lancamentos.find(l => l.semana_id === semana.id) || {};
     const despProjetos = despesasProjetosPorSemana[semana.id] || 0;

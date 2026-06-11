@@ -8,7 +8,7 @@ import { formatBRL } from '@/lib/calculos';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 
-export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessario, cicloId }) {
+export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessario, cicloId, numSemanasContas = 4, onNumSemanasChange }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -88,7 +88,19 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
           ))}
 
           <div className="bg-muted/40 rounded-lg p-4 space-y-2">
-            <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">Contas a Pagar (Mês)</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">Contas a Pagar</p>
+              <div className="flex bg-background rounded border text-[11px]">
+                <button
+                  onClick={() => onNumSemanasChange?.(4)}
+                  className={`px-2 py-0.5 rounded-l font-medium transition-colors ${numSemanasContas === 4 ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+                >04 sem</button>
+                <button
+                  onClick={() => onNumSemanasChange?.(6)}
+                  className={`px-2 py-0.5 rounded-r font-medium transition-colors ${numSemanasContas === 6 ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+                >06 sem</button>
+              </div>
+            </div>
             <p className="text-[26px] font-medium font-heading tabular-nums leading-tight">{formatBRL(contasAPagar)}</p>
           </div>
 

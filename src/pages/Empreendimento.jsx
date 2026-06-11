@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
@@ -52,9 +52,11 @@ export default function Empreendimento() {
     [empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projetos]
   );
 
+  const [numSemanasContas, setNumSemanasContas] = useState(4);
+
   const contasAPagar = useMemo(() =>
-    calcContasAPagar(empLancs, semanasOrdenadas, despPorSemana),
-    [empLancs, semanasOrdenadas, despPorSemana]
+    calcContasAPagar(empLancs, semanasOrdenadas, despPorSemana, numSemanasContas),
+    [empLancs, semanasOrdenadas, despPorSemana, numSemanasContas]
   );
 
   let saldoAtual = saldoEmp?.saldo_atual || 0;
@@ -124,6 +126,8 @@ export default function Empreendimento() {
         contasAPagar={contasAPagar}
         aporteNecessario={aporteNecessario}
         cicloId={cicloAtivo?.id}
+        numSemanasContas={numSemanasContas}
+        onNumSemanasChange={setNumSemanasContas}
       />
 
       {/* Importação Sienge */}

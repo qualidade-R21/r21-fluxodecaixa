@@ -32,6 +32,10 @@
     },
     "observacoes": {
       "type": "string"
+    },
+    "banco_aplicacao": {
+      "type": "string",
+      "description": "Banco/tipo da aplica\u00e7\u00e3o financeira"
     }
   },
   "required": [

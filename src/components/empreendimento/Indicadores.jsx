@@ -17,7 +17,8 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
     saldo_atual_r21: saldoEmp?.saldo_atual_r21 || 0,
     saldo_decoracao: saldoEmp?.saldo_decoracao || 0,
     inadimplencia: saldoEmp?.inadimplencia || 0,
-    observacoes: saldoEmp?.observacoes || ''
+    observacoes: saldoEmp?.observacoes || '',
+    banco_aplicacao: saldoEmp?.banco_aplicacao || ''
   });
 
   useEffect(() => {
@@ -27,7 +28,8 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
       saldo_atual_r21: saldoEmp?.saldo_atual_r21 || 0,
       saldo_decoracao: saldoEmp?.saldo_decoracao || 0,
       inadimplencia: saldoEmp?.inadimplencia || 0,
-      observacoes: saldoEmp?.observacoes || ''
+      observacoes: saldoEmp?.observacoes || '',
+      banco_aplicacao: saldoEmp?.banco_aplicacao || ''
     });
   }, [saldoEmp]);
 
@@ -70,21 +72,38 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {visibleItems.map(item => {
             const isInadimplencia = item.key === 'inadimplencia';
+            const isSaldoAplicado = item.key === 'saldo_aplicado';
             return (
             <div key={item.key} className={`rounded-lg p-4 space-y-2 ${isInadimplencia ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
               <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">{item.label}</p>
               {editing ? (
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form[item.key]}
-                  onChange={e => setForm({ ...form, [item.key]: parseFloat(e.target.value) || 0 })}
-                  className="h-9 text-[15px]"
-                />
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form[item.key]}
+                    onChange={e => setForm({ ...form, [item.key]: parseFloat(e.target.value) || 0 })}
+                    className="h-9 text-[15px]"
+                  />
+                  {isSaldoAplicado && (
+                    <Input
+                      type="text"
+                      placeholder="Banco / tipo de aplicação"
+                      value={form.banco_aplicacao}
+                      onChange={e => setForm({ ...form, banco_aplicacao: e.target.value })}
+                      className="h-8 text-[13px]"
+                    />
+                  )}
+                </div>
               ) : (
-                <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${isInadimplencia ? 'text-primary' : (form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
-                  {formatBRL(form[item.key])}
-                </p>
+                <div>
+                  <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${isInadimplencia ? 'text-primary' : (form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
+                    {formatBRL(form[item.key])}
+                  </p>
+                  {isSaldoAplicado && form.banco_aplicacao && (
+                    <p className="text-[12px] text-muted-foreground mt-1">{form.banco_aplicacao}</p>
+                  )}
+                </div>
               )}
             </div>
             );

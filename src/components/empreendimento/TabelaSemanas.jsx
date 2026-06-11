@@ -79,7 +79,7 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
   } else {
     columns.push({ key: 'despesa_consolidada', label: 'Despesa Cons.', editable: true });
     columns.push({ key: 'despesa_prevista', label: 'Despesa Prev.', editable: true });
-    if (emp.tipo_fluxo === 'com_aportes') {
+    if (emp.tipo_fluxo === 'com_aportes' || emp.tem_previsao_afac) {
       columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true, isCalc: true });
     }
   }

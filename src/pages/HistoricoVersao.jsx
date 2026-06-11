@@ -19,20 +19,20 @@ export default function HistoricoVersao() {
   const { data: versao } = useQuery({
     queryKey: ['versaoSemanal', versaoId],
     queryFn: () => base44.entities.VersaoSemanal.get(versaoId),
-    enabled: !!versaoId,
+    enabled: !!versaoId
   });
 
   // Live data for comparison
   const { data: cicloAtivo } = useCicloAtivo();
   const { data: semanasLive } = useSemanas(cicloAtivo?.id);
-  const semanaIdsLive = useMemo(() => (semanasLive || []).map(s => s.id), [semanasLive]);
+  const semanaIdsLive = useMemo(() => (semanasLive || []).map((s) => s.id), [semanasLive]);
   const { data: lancamentosLive } = useLancamentos(cicloAtivo?.id, semanaIdsLive);
   const { data: saldosLive } = useSaldos(cicloAtivo?.id);
   const { data: sociosLive } = useSocios();
   const { data: participacoesLive } = useParticipacoes();
 
   const semanasLiveOrd = useMemo(() =>
-    [...(semanasLive || [])].sort((a, b) => a.numero - b.numero), [semanasLive]
+  [...(semanasLive || [])].sort((a, b) => a.numero - b.numero), [semanasLive]
   );
 
   const snap = versao?.snapshot || {};
@@ -49,19 +49,19 @@ export default function HistoricoVersao() {
   const comparacao = useMemo(() => {
     if (!comparando || !versao) return null;
     const result = {};
-    snapEmps.forEach(emp => {
-      const snapLancs = snapLancamentos.filter(l => l.empreendimento_id === emp.id);
-      const liveLancs = (lancamentosLive || []).filter(l => l.empreendimento_id === emp.id);
+    snapEmps.forEach((emp) => {
+      const snapLancs = snapLancamentos.filter((l) => l.empreendimento_id === emp.id);
+      const liveLancs = (lancamentosLive || []).filter((l) => l.empreendimento_id === emp.id);
       result[emp.id] = { nome: emp.nome, semanas: {} };
-      snapSemanas.forEach(s => {
-        const snapVal = snapLancs.find(l => l.semana_id === s.id);
-        const liveVal = liveLancs.find(l => l.semana_id === s.id);
+      snapSemanas.forEach((s) => {
+        const snapVal = snapLancs.find((l) => l.semana_id === s.id);
+        const liveVal = liveLancs.find((l) => l.semana_id === s.id);
         result[emp.id].semanas[s.id] = {
           rotulo: s.rotulo || `S${s.numero}`,
           despAntiga: (snapVal?.despesa_consolidada || 0) + (snapVal?.despesa_prevista || 0) + (snapVal?.despesa_afac || 0) + (snapVal?.despesa_r21 || 0),
           despNova: (liveVal?.despesa_consolidada || 0) + (liveVal?.despesa_prevista || 0) + (liveVal?.despesa_afac || 0) + (liveVal?.despesa_r21 || 0),
           recAntiga: (snapVal?.receita_consolidada || 0) + (snapVal?.receita_prevista || 0),
-          recNova: (liveVal?.receita_consolidada || 0) + (liveVal?.receita_prevista || 0),
+          recNova: (liveVal?.receita_consolidada || 0) + (liveVal?.receita_prevista || 0)
         };
       });
     });
@@ -72,8 +72,8 @@ export default function HistoricoVersao() {
     return (
       <div className="flex flex-col items-center py-20">
         <div className="w-6 h-6 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -96,8 +96,8 @@ export default function HistoricoVersao() {
             variant={comparando ? "default" : "outline"}
             size="sm"
             className={comparando ? "bg-white text-black hover:bg-white/90" : "border-white/30 text-white hover:bg-white/10"}
-            onClick={() => setComparando(!comparando)}
-          >
+            onClick={() => setComparando(!comparando)}>
+            
             {comparando ? 'Ocultar comparação' : 'Comparar com versão atual'}
           </Button>
           <Link to="/historico">
@@ -109,8 +109,8 @@ export default function HistoricoVersao() {
       </div>
 
       {/* Comparison table */}
-      {comparando && comparacao && (
-        <Card className="border-2 border-[#4A4A4A]">
+      {comparando && comparacao &&
+      <Card className="border-2 border-[#4A4A4A]">
           <CardHeader className="pb-3 px-6 pt-6">
             <CardTitle className="text-[18px] font-heading font-medium flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-[#AD0000]" />
@@ -118,8 +118,8 @@ export default function HistoricoVersao() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-6 pb-6 overflow-x-auto">
-            {Object.values(comparacao).map(emp => (
-              <div key={emp.nome} className="mb-6 last:mb-0">
+            {Object.values(comparacao).map((emp) =>
+          <div key={emp.nome} className="mb-6 last:mb-0">
                 <h3 className="font-heading font-bold text-[16px] mb-3">{emp.nome}</h3>
                 <table className="w-full text-[14px] min-w-[500px]">
                   <thead>
@@ -134,11 +134,11 @@ export default function HistoricoVersao() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.values(emp.semanas).map(s => {
-                      const varDesp = s.despNova - s.despAntiga;
-                      const varRec = s.recNova - s.recAntiga;
-                      return (
-                        <tr key={s.rotulo} className="border-b border-border">
+                    {Object.values(emp.semanas).map((s) => {
+                  const varDesp = s.despNova - s.despAntiga;
+                  const varRec = s.recNova - s.recAntiga;
+                  return (
+                    <tr key={s.rotulo} className="border-b border-border">
                           <td className="py-2 px-3 font-medium">{s.rotulo}</td>
                           <td className="text-right py-2 px-3 tabular-nums">{formatBRL(s.despAntiga)}</td>
                           <td className="text-right py-2 px-3 tabular-nums">{formatBRL(s.despNova)}</td>
@@ -150,32 +150,32 @@ export default function HistoricoVersao() {
                           <td className={`text-right py-2 px-3 tabular-nums font-medium ${varRec > 0 ? 'text-green-600' : varRec < 0 ? 'text-[#AD0000]' : ''}`}>
                             {varRec > 0 ? '+' : ''}{formatBRL(varRec)}
                           </td>
-                        </tr>
-                      );
-                    })}
+                        </tr>);
+
+                })}
                   </tbody>
                 </table>
               </div>
-            ))}
+          )}
           </CardContent>
         </Card>
-      )}
+      }
 
       {/* Render each empreendimento from snapshot */}
-      {snapEmps.filter(e => e.ativo !== false).map(emp => {
-        const empLancs = snapLancamentos.filter(l => l.empreendimento_id === emp.id);
-        const saldoEmp = snapSaldos.find(s => s.empreendimento_id === emp.id);
-        const projetos = emp.tipo_fluxo === 'multi_projetos'
-          ? snapProjetos.filter(p => p.empreendimento_pai_id === emp.id)
-          : [];
+      {snapEmps.filter((e) => e.ativo !== false).map((emp) => {
+        const empLancs = snapLancamentos.filter((l) => l.empreendimento_id === emp.id);
+        const saldoEmp = snapSaldos.find((s) => s.empreendimento_id === emp.id);
+        const projetos = emp.tipo_fluxo === 'multi_projetos' ?
+        snapProjetos.filter((p) => p.empreendimento_pai_id === emp.id) :
+        [];
 
         const despPorSemana = {};
         if (emp.tipo_fluxo === 'multi_projetos') {
-          const projetoIds = projetos.map(p => p.id);
-          snapSemanas.forEach(s => {
-            despPorSemana[s.id] = snapDespesas
-              .filter(d => projetoIds.includes(d.projeto_id) && d.semana_id === s.id)
-              .reduce((sum, d) => sum + (d.valor_despesa || 0), 0);
+          const projetoIds = projetos.map((p) => p.id);
+          snapSemanas.forEach((s) => {
+            despPorSemana[s.id] = snapDespesas.
+            filter((d) => projetoIds.includes(d.projeto_id) && d.semana_id === s.id).
+            reduce((sum, d) => sum + (d.valor_despesa || 0), 0);
           });
         }
 
@@ -187,40 +187,40 @@ export default function HistoricoVersao() {
           saldoAtual = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
         }
 
-        const aporteNecessario = (emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos')
-          ? calcAporteTotalNecessario(contasAPagar, saldoAtual, emp.margem_aporte_total || 0)
-          : 0;
+        const aporteNecessario = emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos' ?
+        calcAporteTotalNecessario(contasAPagar, saldoAtual, emp.margem_aporte_total || 0) :
+        0;
 
         return (
           <div key={emp.id} className="space-y-8">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-[hsl(var(--primary))] bg-[hsl(var(--sidebar-border))]">
               <h2 className="text-[24px] font-heading font-bold">{emp.nome}</h2>
               <span className="text-[14px] text-muted-foreground capitalize">{emp.tipo_fluxo?.replace('_', ' ')}</span>
             </div>
 
             <ReadOnlyIndicadores emp={emp} saldoEmp={saldoEmp} contasAPagar={contasAPagar} aporteNecessario={aporteNecessario} />
 
-            {emp.tipo_fluxo === 'multi_projetos' ? (
-              <div className="opacity-80 pointer-events-none">
+            {emp.tipo_fluxo === 'multi_projetos' ?
+            <div className="opacity-80 pointer-events-none">
                 <TabelaMultiProjetos
-                  emp={emp}
-                  semanas={snapSemanas}
-                  projetos={projetos}
-                  despesasProjetos={snapDespesas}
-                  acumulados={acumulados}
-                />
-              </div>
-            ) : (
-              <div className="opacity-80 pointer-events-none">
+                emp={emp}
+                semanas={snapSemanas}
+                projetos={projetos}
+                despesasProjetos={snapDespesas}
+                acumulados={acumulados} />
+              
+              </div> :
+
+            <div className="opacity-80 pointer-events-none">
                 <TabelaSemanas
-                  emp={emp}
-                  semanas={snapSemanas}
-                  lancamentos={empLancs}
-                  saldoEmp={saldoEmp}
-                  acumulados={acumulados}
-                />
+                emp={emp}
+                semanas={snapSemanas}
+                lancamentos={empLancs}
+                saldoEmp={saldoEmp}
+                acumulados={acumulados} />
+              
               </div>
-            )}
+            }
 
             <div className="opacity-80 pointer-events-none">
               <AportesSection
@@ -232,16 +232,16 @@ export default function HistoricoVersao() {
                 socios={snapSocios}
                 despesasPorSemana={despPorSemana}
                 projetosInternos={projetos}
-                acumulados={acumulados}
-              />
+                acumulados={acumulados} />
+              
             </div>
 
             <hr className="border-border" />
-          </div>
-        );
+          </div>);
+
       })}
-    </div>
-  );
+    </div>);
+
 }
 
 function ReadOnlyIndicadores({ emp, saldoEmp, contasAPagar, aporteNecessario }) {
@@ -272,6 +272,6 @@ function ReadOnlyIndicadores({ emp, saldoEmp, contasAPagar, aporteNecessario }) 
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }

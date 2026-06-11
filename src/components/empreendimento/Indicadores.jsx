@@ -68,8 +68,10 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {visibleItems.map(item => (
-            <div key={item.key} className="bg-muted/40 rounded-lg p-4 space-y-2">
+          {visibleItems.map(item => {
+            const isInadimplencia = item.key === 'inadimplencia';
+            return (
+            <div key={item.key} className={`rounded-lg p-4 space-y-2 ${isInadimplencia ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
               <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">{item.label}</p>
               {editing ? (
                 <Input
@@ -80,12 +82,13 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
                   className="h-9 text-[15px]"
                 />
               ) : (
-                <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${(form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
+                <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${isInadimplencia ? 'text-primary' : (form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
                   {formatBRL(form[item.key])}
                 </p>
               )}
             </div>
-          ))}
+            );
+          })}
 
           <div className="bg-muted/40 rounded-lg p-4 space-y-2">
             <div className="flex items-center justify-between">

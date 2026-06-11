@@ -12,51 +12,51 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
       <Card className={`group hover:shadow-lg transition-all duration-200 cursor-pointer h-full ${
         temSaldoNegativo ? 'border-2 border-primary' : 'border border-border'
       }`}>
-        <CardHeader className="pb-4 p-6">
+        <CardHeader className="pb-5 p-8">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded flex items-center justify-center shrink-0 ${
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded flex items-center justify-center shrink-0 ${
                 temSaldoNegativo ? 'bg-primary' : 'bg-foreground'
               }`}>
-                <Building2 className="w-5 h-5 text-primary-foreground" />
+                <Building2 className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <CardTitle className="text-[16px] font-heading font-bold leading-tight">{emp.nome}</CardTitle>
-                <span className="text-[13px] text-muted-foreground capitalize">{emp.tipo_fluxo.replace('_', ' ')}</span>
+                <CardTitle className="text-[20px] font-heading font-bold leading-tight">{emp.nome}</CardTitle>
+                <span className="text-[14px] text-muted-foreground capitalize">{emp.tipo_fluxo.replace('_', ' ')}</span>
               </div>
             </div>
-            {temSaldoNegativo && <AlertTriangle className="w-5 h-5 text-primary shrink-0" />}
+            {temSaldoNegativo && <AlertTriangle className="w-6 h-6 text-primary shrink-0" />}
           </div>
         </CardHeader>
-        <CardContent className="pt-0 px-6 pb-6">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+        <CardContent className="pt-0 px-8 pb-8">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-6">
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Saldo Atual</p>
-              <p className={`text-[15px] font-medium font-heading tabular-nums leading-tight break-all ${saldoAtual < 0 ? 'text-primary' : ''}`}>
+              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Saldo Atual</p>
+              <p className={`text-[18px] font-semibold font-heading tabular-nums leading-tight break-all ${saldoAtual < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAtual)}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Projeção Final</p>
-              <p className={`text-[15px] font-medium font-heading tabular-nums leading-tight break-all ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
+              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Projeção Final</p>
+              <p className={`text-[18px] font-semibold font-heading tabular-nums leading-tight break-all ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Contas a Pagar</p>
-              <p className="text-[15px] font-medium font-heading tabular-nums leading-tight break-all">{formatBRL(contasAPagar)}</p>
+              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Contas a Pagar</p>
+              <p className="text-[18px] font-semibold font-heading tabular-nums leading-tight break-all">{formatBRL(contasAPagar)}</p>
             </div>
             {showAporte && (
               <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-1">Aporte Nec.</p>
-                <p className={`text-[15px] font-medium font-heading tabular-nums leading-tight break-all ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
+                <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Aporte Nec.</p>
+                <p className={`text-[18px] font-semibold font-heading tabular-nums leading-tight break-all ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
                   {formatBRL(aporteNecessario)}
                 </p>
               </div>
             )}
           </div>
-          <div className="mt-4 flex items-center justify-end text-[13px] text-muted-foreground group-hover:text-foreground transition-colors">
-            Ver detalhes <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          <div className="mt-5 flex items-center justify-end text-[14px] text-muted-foreground group-hover:text-foreground transition-colors">
+            Ver detalhes <ArrowRight className="w-4 h-4 ml-1" />
           </div>
         </CardContent>
       </Card>

@@ -5,7 +5,9 @@ import EmpreendimentoCard from '@/components/dashboard/EmpreendimentoCard';
 import SaldoChart from '@/components/dashboard/SaldoChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, FileDown } from 'lucide-react';
+import { Archive, Calendar, FileDown } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAfacSync } from '@/lib/useAfacSync';
 import { gerarPDFGeral } from '@/lib/gerarPDF';
 import { useSocios, useParticipacoes } from '@/lib/useFluxoData';
@@ -101,6 +103,17 @@ export default function Dashboard() {
     return result;
   }, [empData]);
 
+  const queryClient = useQueryClient();
+
+  const handleArquivar = async () => {
+    try {
+      await base44.functions.invoke('arquivarVersaoSemanal', {});
+      queryClient.invalidateQueries({ queryKey: ['versoesSemanais'] });
+    } catch (err) {
+      // error will bubble
+    }
+  };
+
   const handleGerarPDFGeral = () => {
     gerarPDFGeral({
       empreendimentos: empAtivos,
@@ -138,14 +151,20 @@ export default function Dashboard() {
             </span>
           </div>
         </div>
-        <Button variant="outline" onClick={handleGerarPDFGeral} className="gap-2 text-[15px]">
-          <FileDown className="w-4 h-4" />
-          Gerar PDF Geral
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={handleArquivar} className="gap-2 text-[15px]">
+            <Archive className="w-4 h-4" />
+            Arquivar versão da semana
+          </Button>
+          <Button variant="outline" onClick={handleGerarPDFGeral} className="gap-2 text-[15px]">
+            <FileDown className="w-4 h-4" />
+            Gerar PDF Geral
+          </Button>
+        </div>
       </div>
 
       {/* Cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
         {empAtivos.map(emp => (
           <EmpreendimentoCard
             key={emp.id}

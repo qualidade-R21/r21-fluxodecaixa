@@ -15,6 +15,9 @@ import Dashboard from '@/pages/Dashboard';
 import Empreendimento from '@/pages/Empreendimento';
 import AportesRicardo from '@/pages/AportesRicardo';
 import Configuracoes from '@/pages/Configuracoes';
+import Historico from '@/pages/Historico';
+import HistoricoVersao from '@/pages/HistoricoVersao';
+import Relatorios from '@/pages/Relatorios';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +51,9 @@ const AuthenticatedApp = () => {
           <Route path="/empreendimento/:id" element={<Empreendimento />} />
           <Route path="/aportes-ricardo" element={<AportesRicardo />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/historico" element={<Historico />} />
+          <Route path="/historico/:versaoId" element={<HistoricoVersao />} />
+          <Route path="/relatorios" element={<Relatorios />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,28 @@
+{
+  "name": "VersaoSemanal",
+  "type": "object",
+  "properties": {
+    "data_referencia": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de refer\u00eancia da vers\u00e3o"
+    },
+    "ciclo_id": {
+      "type": "string",
+      "description": "ID do ciclo ativo no momento"
+    },
+    "snapshot": {
+      "type": "object",
+      "description": "C\u00f3pia completa e congelada de todos os empreendimentos, lan\u00e7amentos, saldos, projetos e despesas"
+    },
+    "resumo": {
+      "type": "object",
+      "description": "Resumo por empreendimento: saldo atual, contas a pagar, aporte necess\u00e1rio"
+    }
+  },
+  "required": [
+    "data_referencia",
+    "ciclo_id",
+    "snapshot"
+  ]
+}

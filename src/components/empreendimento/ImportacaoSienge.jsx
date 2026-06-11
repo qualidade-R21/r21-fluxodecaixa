@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Upload, CheckCircle, X, AlertTriangle, FileText } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Upload, CheckCircle, X, AlertTriangle, FileText, Archive } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatBRL } from '@/lib/calculos';
 import { useQueryClient } from '@tanstack/react-query';
@@ -106,6 +107,8 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
   const [preview, setPreview] = useState(null); // { tipo, nomeEmpresa, totalEmpresa, porSemana, fileNome }
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [showArchiveWarning, setShowArchiveWarning] = useState(false);
+  const [archivePending, setArchivePending] = useState(false);
   const inputRef = useRef();
   const qc = useQueryClient();
 
@@ -154,7 +157,27 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     setLoading(false);
   };
 
-  const handleConfirm = async () => {
+  const checkArchiveAndConfirm = async () => {
+    // Check if there's a version from today
+    const hoje = new Date().toISOString().split('T')[0];
+    const versoesHoje = await base44.entities.VersaoSemanal.filter({ data_referencia: hoje });
+    if (versoesHoje.length === 0) {
+      setShowArchiveWarning(true);
+    } else {
+      doConfirm();
+    }
+  };
+
+  const handleArchiveFirst = async () => {
+    setArchivePending(true);
+    await base44.functions.invoke('arquivarVersaoSemanal', {});
+    qc.invalidateQueries({ queryKey: ['versoesSemanais'] });
+    setArchivePending(false);
+    setShowArchiveWarning(false);
+    doConfirm();
+  };
+
+  const doConfirm = async () => {
     if (!preview) return;
     setLoading(true);
     const field = preview.tipo === 'despesas'
@@ -293,7 +316,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
 
           <div className="flex items-center justify-end gap-3">
             <Button variant="outline" className="text-[15px]" onClick={() => setPreview(null)}>Cancelar</Button>
-            <Button className="text-[15px]" onClick={handleConfirm} disabled={loading}>
+            <Button className="text-[15px]" onClick={checkArchiveAndConfirm} disabled={loading}>
               {loading ? 'Gravando...' : 'Confirmar Importação'}
             </Button>
           </div>
@@ -304,6 +327,29 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
 
   return (
     <div>
+      <AlertDialog open={showArchiveWarning} onOpenChange={setShowArchiveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Archive className="w-5 h-5" />
+              Deseja arquivar a versão atual antes de atualizar?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[15px]">
+              Nenhuma versão foi arquivada hoje. Recomendamos arquivar o estado atual
+              antes de sobrescrever os valores com a importação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={archivePending} onClick={() => { setShowArchiveWarning(false); doConfirm(); }}>
+              Importar sem arquivar
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={archivePending} onClick={handleArchiveFirst} className="gap-2">
+              {archivePending ? 'Arquivando...' : 'Arquivar e depois importar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div
         className={`border-2 border-dashed rounded-lg px-6 py-4 text-center transition-colors cursor-pointer ${
           dragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/30'

@@ -98,9 +98,8 @@ export function calcFatorRateio(equalizacao) {
 }
 
 // F) Aportes por Semana
-export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, semanasOrdenadas, equalizacaoComFator, despesasProjetosPorSemana = {}, projetosInternos = []) {
+export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, semanasOrdenadas, equalizacaoComFator, despesasProjetosPorSemana = {}, projetosInternos = [], saldosAcumulados = {}) {
   const aportesPorSemana = {};
-  let saldoAcumAnterior = 0;
   let somaAportesAnteriores = 0;
 
   for (let i = 0; i < semanasOrdenadas.length; i++) {
@@ -108,15 +107,17 @@ export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, sema
     const lanc = lancamentos.find(l => l.semana_id === semana.id) || {};
     const despProjetos = despesasProjetosPorSemana[semana.id] || 0;
     
+    // despesas = consolidada + prevista (sem despesa_afac)
     let despesasSemana;
     if (empreendimento.tipo_fluxo === 'multi_projetos') {
       despesasSemana = despProjetos;
     } else {
-      despesasSemana = (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_afac || 0);
+      despesasSemana = (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0);
     }
 
     let aporteSemana = 0;
     if (i === 0) {
+      // Semana 1: compara despesas com saldo_atual (sem considerar receitas)
       let saldoAtual = saldoEmp?.saldo_atual || 0;
       if (empreendimento.tipo_fluxo === 'multi_projetos' && projetosInternos.length > 0) {
         saldoAtual = projetosInternos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
@@ -124,16 +125,13 @@ export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, sema
       if (despesasSemana > saldoAtual) {
         aporteSemana = despesasSemana - saldoAtual + (empreendimento.margem_seguranca_semana1 || 0);
       }
-      // calc saldo acumulado for next iteration
-      const saldoAplicado = empreendimento.tem_saldo_aplicado ? (saldoEmp?.saldo_aplicado || 0) : 0;
-      const saldoSemana = calcSaldoSemana(lanc, empreendimento, despProjetos);
-      saldoAcumAnterior = saldoAtual + saldoAplicado + saldoSemana;
     } else {
+      // Semanas 2+: usa saldo_acumulado da tabela Fluxo Semanal (pré-calculado)
+      const semanaAnterior = semanasOrdenadas[i - 1];
+      const saldoAcumAnterior = saldosAcumulados[semanaAnterior.id] || 0;
       if (despesasSemana > saldoAcumAnterior) {
         aporteSemana = despesasSemana - saldoAcumAnterior + (empreendimento.margem_seguranca_demais || 0) - somaAportesAnteriores;
       }
-      const saldoSemana = calcSaldoSemana(lanc, empreendimento, despProjetos);
-      saldoAcumAnterior = saldoAcumAnterior + saldoSemana;
     }
 
     aporteSemana = Math.max(0, aporteSemana);

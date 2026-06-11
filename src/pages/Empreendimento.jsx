@@ -163,6 +163,7 @@ export default function Empreendimento() {
         socios={socios}
         despesasPorSemana={despPorSemana}
         projetosInternos={projetos}
+        acumulados={acumulados}
       />
     </div>
   );

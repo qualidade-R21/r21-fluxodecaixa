@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana } from '@/lib/calculos';
 
-export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, participacoes, socios, despesasPorSemana, projetosInternos }) {
+export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, participacoes, socios, despesasPorSemana, projetosInternos, acumulados }) {
   if (emp.tipo_fluxo !== 'com_aportes' && emp.tipo_fluxo !== 'multi_projetos') return null;
 
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
@@ -25,7 +25,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
   const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
   const equalizacao = calcEqualizacao(empParts, aporteTotal);
   const eqComFator = calcFatorRateio(equalizacao);
-  const aportesSemana = calcAportesPorSemana(lancamentos, emp, saldoEmp, semanas, eqComFator, despesasPorSemana, projetosInternos);
+  const aportesSemana = calcAportesPorSemana(lancamentos, emp, saldoEmp, semanas, eqComFator, despesasPorSemana, projetosInternos, acumulados);
 
   const getSocioNome = (id) => socios.find(s => s.id === id)?.nome || '—';
 

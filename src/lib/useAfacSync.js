@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana } from './calculos';
+import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados } from './calculos';
 
 function computeAportes(emp, empLancs, saldoEmp, semanas, participacoes, despPorSemana = {}, projetos = []) {
   if (!emp) return {};
@@ -27,7 +27,8 @@ function computeAportes(emp, empLancs, saldoEmp, semanas, participacoes, despPor
   const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
   const eq = calcEqualizacao(empParts, aporteTotal);
   const eqF = calcFatorRateio(eq);
-  return calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eqF, despPorSemana, projetos);
+  const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanas, despPorSemana, projetos);
+  return calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eqF, despPorSemana, projetos, acumulados);
 }
 
 export function useAfacSync({

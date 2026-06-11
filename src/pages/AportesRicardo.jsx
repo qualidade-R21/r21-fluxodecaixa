@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
-import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, formatBRL, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
+import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -58,7 +58,8 @@ export default function AportesRicardo() {
     const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
     const eq = calcEqualizacao(empParts, aporteTotal);
     const eqF = calcFatorRateio(eq);
-    return calcAportesPorSemana(empLancs, emp, saldoEmp, semanasOrdenadas, eqF, despPorSemana, projs);
+    const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projs);
+    return calcAportesPorSemana(empLancs, emp, saldoEmp, semanasOrdenadas, eqF, despPorSemana, projs, acumulados);
   };
 
   // Find relevant socio IDs

@@ -6,6 +6,7 @@ import {
   calcEqualizacao,
   calcFatorRateio,
   calcAportesPorSemana,
+  calcSaldosAcumulados,
 } from '@/lib/calculos';
 
 // ── A4 landscape em mm: 297 × 210 ──────────────────────────
@@ -433,7 +434,7 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
         }, 0);
       });
     }
-    const aportesSemana = calcAportesPorSemana(empLancsA, emp, saldoEmp, semanas, eqComFator, despPorSemana, projetos);
+    const aportesSemana = calcAportesPorSemana(empLancsA, emp, saldoEmp, semanas, eqComFator, despPorSemana, projetos, acumulados);
 
     y = drawSectionTitle(doc, y, 'Aportes por Semana');
     const firstW = 30;
@@ -591,7 +592,8 @@ export function gerarPDFGeral({
       const cap = calcContasAPagar(empLancs, semanas, despPorSemana);
       const at = cap > saldoAtual ? cap - saldoAtual + (emp.margem_aporte_total || 0) : 0;
       const eq = calcFatorRateio(calcEqualizacao(empParts, at));
-      const as = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eq, despPorSemana, projetos);
+      const asAcumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanas, despPorSemana, projetos);
+      const as = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eq, despPorSemana, projetos, asAcumulados);
       let grand = 0;
       const row = [emp.nome];
       semanas.forEach(s => { const t = as[s.id]?.total || 0; grand += t; row.push(t); });

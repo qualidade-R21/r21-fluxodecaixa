@@ -16,8 +16,7 @@ export function calcSaldoSemana(lancamento, empreendimento, despesasProjetos = 0
     return -despesasProjetos;
   }
   const receitas = (lancamento.receita_consolidada || 0) + (lancamento.receita_prevista || 0);
-  const despesas = (lancamento.despesa_consolidada || 0) + (lancamento.despesa_prevista || 0) + (lancamento.despesa_afac || 0);
-  // despesa_r21 NÃO entra no saldo
+  const despesas = (lancamento.despesa_consolidada || 0) + (lancamento.despesa_prevista || 0) + (lancamento.despesa_afac || 0) + (lancamento.despesa_r21 || 0);
   return receitas - despesas;
 }
 

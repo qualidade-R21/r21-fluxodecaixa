@@ -1,6 +1,6 @@
 // Hook que mantém sincronizado o campo despesa_afac dos empreendimentos RIC e GTR
 // RIC.despesa_afac[semana] = aporte semanal do sócio RIC no Grupo GC
-// GTR.despesa_afac[semana] = aporte semanal do sócio GTR na Solenne
+// GTR.despesa_afac[semana] = Saldo Acumulado do RIC na semana (se negativo; senão 0)
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -36,28 +36,20 @@ export function useAfacSync({
   socios, participacoes, projetos, despesasProjetos
 }) {
   const qc = useQueryClient();
-  // Use ref to track last synced values and avoid infinite loops
   const lastAfacRef = useRef({});
 
   useEffect(() => {
     if (!empreendimentos.length || !semanas.length || !socios.length) return;
 
-    const soloSolenne = empreendimentos.find(e => e.nome && e.nome.toLowerCase().includes('solenne'));
     const soloGC = empreendimentos.find(e => e.tipo_fluxo === 'multi_projetos');
     const empGTR = empreendimentos.find(e => e.nome && e.nome.toLowerCase().includes('gtr'));
     const empRIC = empreendimentos.find(e => e.nome && e.nome.toLowerCase().includes('ric') && e.tipo_fluxo !== 'multi_projetos');
 
-    const socioGTR = socios.find(s => s.nome === 'GTR');
     const socioRIC = socios.find(s => s.nome === 'RIC');
 
-    if (!soloSolenne || !soloGC || !empGTR || !empRIC || !socioGTR || !socioRIC) return;
+    if (!soloGC || !empGTR || !empRIC || !socioRIC) return;
 
-    // Calcular aportes Solenne
-    const solenneLancs = lancamentos.filter(l => l.empreendimento_id === soloSolenne.id);
-    const solenneSaldo = saldos.find(s => s.empreendimento_id === soloSolenne.id);
-    const aportesSolenne = computeAportes(soloSolenne, solenneLancs, solenneSaldo, semanas, participacoes);
-
-    // Calcular aportes GrupoGC
+    // 1. Calcular aportes GC → RIC afac
     const gcLancs = lancamentos.filter(l => l.empreendimento_id === soloGC.id);
     const gcSaldo = saldos.find(s => s.empreendimento_id === soloGC.id);
     const gcDespPorSemana = {};
@@ -69,10 +61,20 @@ export function useAfacSync({
     });
     const aportesGC = computeAportes(soloGC, gcLancs, gcSaldo, semanas, participacoes, gcDespPorSemana, projetos);
 
-    // Build new AFAC values
+    // 2. Computar RIC afac e saldos acumulados localmente (para derivar GTR afac)
+    const ricLancs = lancamentos.filter(l => l.empreendimento_id === empRIC.id);
+    const ricSaldo = saldos.find(s => s.empreendimento_id === empRIC.id);
+    const ricLancsUpdated = ricLancs.map(l => ({
+      ...l,
+      despesa_afac: aportesGC[l.semana_id]?.porSocio[socioRIC.id] || 0
+    }));
+    const ricAcumulados = calcSaldosAcumulados(ricLancsUpdated, empRIC, ricSaldo, semanas, {}, []);
+
+    // 3. GTR afac = RIC saldo acumulado (quando negativo)
     const newAfac = {};
     semanas.forEach(s => {
-      newAfac[`gtr_${s.id}`] = aportesSolenne[s.id]?.porSocio[socioGTR.id] || 0;
+      const ricSaldoAcum = ricAcumulados[s.id] || 0;
+      newAfac[`gtr_${s.id}`] = ricSaldoAcum < 0 ? ricSaldoAcum : 0;
       newAfac[`ric_${s.id}`] = aportesGC[s.id]?.porSocio[socioRIC.id] || 0;
     });
 
@@ -86,19 +88,19 @@ export function useAfacSync({
       let dirty = false;
 
       for (const semana of semanas) {
-        // GTR afac
+        // GTR afac (vem do RIC)
         const afacGTR = newAfac[`gtr_${semana.id}`];
         const lancGTR = lancamentos.find(l => l.empreendimento_id === empGTR.id && l.semana_id === semana.id);
         if (Math.abs((lancGTR?.despesa_afac || 0) - afacGTR) > 0.01) {
           if (lancGTR) {
             await base44.entities.LancamentoSemanal.update(lancGTR.id, { despesa_afac: afacGTR });
-          } else if (afacGTR > 0) {
+          } else if (afacGTR !== 0) {
             await base44.entities.LancamentoSemanal.create({ empreendimento_id: empGTR.id, semana_id: semana.id, despesa_afac: afacGTR });
           }
           dirty = true;
         }
 
-        // RIC afac
+        // RIC afac (vem do GC)
         const afacRIC = newAfac[`ric_${semana.id}`];
         const lancRIC = lancamentos.find(l => l.empreendimento_id === empRIC.id && l.semana_id === semana.id);
         if (Math.abs((lancRIC?.despesa_afac || 0) - afacRIC) > 0.01) {

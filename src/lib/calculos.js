@@ -89,10 +89,11 @@ export function calcEqualizacao(participacoes, aporteTotalNecessario) {
 }
 
 export function calcFatorRateio(equalizacao) {
-  const somaAportesNecessarios = equalizacao.reduce((sum, e) => sum + Math.max(0, e.aporteNecessario), 0);
+  // Rateio por percentual_sociedade (não pelo aporteNecessario, pois cobre despesas correntes)
+  const somaPct = equalizacao.reduce((sum, e) => sum + (e.percentual_sociedade || 0), 0);
   return equalizacao.map(e => ({
     ...e,
-    fatorRateio: somaAportesNecessarios > 0 ? Math.max(0, e.aporteNecessario) / somaAportesNecessarios : 0
+    fatorRateio: somaPct > 0 ? (e.percentual_sociedade || 0) / somaPct : 0
   }));
 }
 

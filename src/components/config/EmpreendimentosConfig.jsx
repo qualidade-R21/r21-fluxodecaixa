@@ -29,6 +29,11 @@ export default function EmpreendimentosConfig() {
   const openNew = () => { setForm(defaultEmp); setEditId(null); setOpen(true); };
   const openEdit = (emp) => { setForm({ ...defaultEmp, ...emp }); setEditId(emp.id); setOpen(true); };
 
+  const handleDelete = async (id) => {
+    await base44.entities.Empreendimento.delete(id);
+    qc.invalidateQueries({ queryKey: ['empreendimentos'] });
+  };
+
   const handleSave = async () => {
     const data = { ...form };
     delete data.id; delete data.created_date; delete data.updated_date; delete data.created_by_id;
@@ -59,7 +64,10 @@ export default function EmpreendimentosConfig() {
                 <Badge variant="outline" className="text-[10px] capitalize">{emp.tipo_fluxo?.replace('_', ' ')}</Badge>
                 {!emp.ativo && <Badge variant="secondary" className="text-[10px]">Inativo</Badge>}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => openEdit(emp)}><Pencil className="w-3 h-3" /></Button>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => openEdit(emp)}><Pencil className="w-3 h-3" /></Button>
+                <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleDelete(emp.id)}><Trash2 className="w-3 h-3" /></Button>
+              </div>
             </div>
           ))}
         </div>

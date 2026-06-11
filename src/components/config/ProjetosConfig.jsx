@@ -29,6 +29,12 @@ export default function ProjetosConfig() {
   const openNew = () => { setForm({ empreendimento_pai_id: multiEmps[0]?.id || '', nome: '', saldo_disponivel: 0 }); setEditId(null); setOpen(true); };
   const openEdit = (p) => { setForm({ ...p }); setEditId(p.id); setOpen(true); };
 
+  const handleDelete = async (id) => {
+    await base44.entities.ProjetoInterno.delete(id);
+    qc.invalidateQueries({ queryKey: ['all-projetos'] });
+    qc.invalidateQueries({ queryKey: ['projetos-internos'] });
+  };
+
   const handleSave = async () => {
     const data = { empreendimento_pai_id: form.empreendimento_pai_id, nome: form.nome, saldo_disponivel: form.saldo_disponivel };
     if (editId) {
@@ -59,7 +65,10 @@ export default function ProjetosConfig() {
                 <span className="text-xs text-muted-foreground">({getEmp(p.empreendimento_pai_id)})</span>
                 <span className="text-xs tabular-nums">{formatBRL(p.saldo_disponivel)}</span>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="w-3 h-3" /></Button>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="w-3 h-3" /></Button>
+                <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleDelete(p.id)}><Trash2 className="w-3 h-3" /></Button>
+              </div>
             </div>
           ))}
           {projetos.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum projeto criado.</p>}

@@ -22,6 +22,11 @@ export default function SociosConfig() {
   const openNew = () => { setNome(''); setVinculado(false); setEditId(null); setOpen(true); };
   const openEdit = (s) => { setNome(s.nome); setVinculado(s.vinculado_a_ricardo || false); setEditId(s.id); setOpen(true); };
 
+  const handleDelete = async (id) => {
+    await base44.entities.Socio.delete(id);
+    qc.invalidateQueries({ queryKey: ['socios'] });
+  };
+
   const handleSave = async () => {
     if (editId) {
       await base44.entities.Socio.update(editId, { nome, vinculado_a_ricardo: vinculado });
@@ -47,7 +52,10 @@ export default function SociosConfig() {
                 <span className="text-sm font-medium">{s.nome}</span>
                 {s.vinculado_a_ricardo && <Badge variant="outline" className="text-[10px]">Vinculado Ricardo</Badge>}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="w-3 h-3" /></Button>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="w-3 h-3" /></Button>
+                <Button variant="ghost" size="icon" className="text-primary" onClick={() => handleDelete(s.id)}><Trash2 className="w-3 h-3" /></Button>
+              </div>
             </div>
           ))}
         </div>

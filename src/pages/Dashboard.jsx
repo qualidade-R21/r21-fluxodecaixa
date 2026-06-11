@@ -23,6 +23,7 @@ export default function Dashboard() {
   const { data: despesasProjetos } = useDespesasProjetos(semanaIds);
   const { data: socios } = useSocios();
   const { data: participacoes } = useParticipacoes();
+  const [numSemanasContas, setNumSemanasContas] = useState(4);
 
   // Fetch all projetos internos
   const { data: allProjetos } = useProjetosInternos(
@@ -69,7 +70,7 @@ export default function Dashboard() {
       }
 
       const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projetos);
-      const contasAPagar = calcContasAPagar(empLancs, semanasOrdenadas, despPorSemana);
+      const contasAPagar = calcContasAPagar(empLancs, semanasOrdenadas, despPorSemana, numSemanasContas);
       
       let saldoAtual = saldoEmp?.saldo_atual || 0;
       if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
@@ -94,7 +95,7 @@ export default function Dashboard() {
       };
     });
     return data;
-  }, [empAtivos, lancamentos, saldos, semanasOrdenadas, allProjetos, despesasProjetos]);
+  }, [empAtivos, lancamentos, saldos, semanasOrdenadas, allProjetos, despesasProjetos, numSemanasContas]);
 
   const acumuladosPorEmp = useMemo(() => {
     const result = {};
@@ -103,6 +104,15 @@ export default function Dashboard() {
     });
     return result;
   }, [empData]);
+
+  const contasAPagarLabel = useMemo(() => {
+    const idx = Math.min(numSemanasContas, semanasOrdenadas.length) - 1;
+    if (idx < 0) return 'Contas à Pagar';
+    const dataFim = semanasOrdenadas[idx]?.data_fim;
+    if (!dataFim) return 'Contas à Pagar';
+    const [y, m, d] = dataFim.split('-');
+    return `Contas à pagar até ${d}/${m}`;
+  }, [numSemanasContas, semanasOrdenadas]);
 
   const queryClient = useQueryClient();
   const [novoCicloOpen, setNovoCicloOpen] = useState(false);
@@ -145,7 +155,19 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[28px] font-heading font-bold">Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-[28px] font-heading font-bold">Dashboard</h1>
+            <div className="flex bg-background rounded border border-border text-[12px]">
+              <button
+                onClick={() => setNumSemanasContas(4)}
+                className={`px-2.5 py-1 rounded-l font-medium transition-colors ${numSemanasContas === 4 ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              >04 sem</button>
+              <button
+                onClick={() => setNumSemanasContas(6)}
+                className={`px-2.5 py-1 rounded-r font-medium transition-colors ${numSemanasContas === 6 ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              >06 sem</button>
+            </div>
+          </div>
           <div className="flex items-center gap-2 mt-1.5">
             <Badge variant="outline" className="font-heading text-[13px]">{cicloAtivo.nome}</Badge>
             <span className="text-[13px] text-muted-foreground">
@@ -180,6 +202,7 @@ export default function Dashboard() {
             contasAPagar={empData[emp.id]?.contasAPagar || 0}
             aporteNecessario={empData[emp.id]?.aporteNecessario || 0}
             temSaldoNegativo={empData[emp.id]?.temSaldoNegativo || false}
+            contasAPagarLabel={contasAPagarLabel}
           />
         ))}
       </div>

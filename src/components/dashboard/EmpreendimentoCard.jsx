@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Building2, ArrowRight, AlertTriangle } from 'lucide-react';
 import { formatBRL } from '@/lib/calculos';
 
-export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFinal, contasAPagar, aporteNecessario, temSaldoNegativo }) {
+export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFinal, contasAPagar, aporteNecessario, temSaldoNegativo, contasAPagarLabel }) {
   const showAporte = emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos';
 
   return (
@@ -37,13 +37,13 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Projeção Final</p>
+              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Saldo Aplicado</p>
               <p className={`text-[18px] font-semibold font-heading tabular-nums leading-tight break-all ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Contas a Pagar</p>
+              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">{contasAPagarLabel || 'Contas à Pagar'}</p>
               <p className="text-[18px] font-semibold font-heading tabular-nums leading-tight break-all">{formatBRL(contasAPagar)}</p>
             </div>
             {showAporte && (

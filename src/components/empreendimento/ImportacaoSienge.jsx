@@ -187,32 +187,12 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     if (!previews.length) return;
     setLoading(true);
 
-    for (const preview of previews) {
-      const field = preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
-
-      for (const semana of semanas) {
-        const val = preview.porSemana[semana.id] || 0;
-        if (val === 0) continue;
-        const lanc = lancamentos.find(l => l.semana_id === semana.id && l.empreendimento_id === emp.id);
-        if (lanc) {
-          await base44.entities.LancamentoSemanal.update(lanc.id, { [field]: val });
-        } else {
-          await base44.entities.LancamentoSemanal.create({
-            empreendimento_id: emp.id,
-            semana_id: semana.id,
-            [field]: val
-          });
-        }
-      }
-
-      await base44.entities.RegistroImportacao.create({
-        empreendimento_id: emp.id,
-        ciclo_id: cicloId,
-        nome_arquivo: preview.fileNome,
-        tipo: preview.tipo,
-        total_extraido: preview.totalExtraido,
-      });
-    }
+    await base44.functions.invoke('importarSienge', {
+      empreendimento_id: emp.id,
+      ciclo_id: cicloId,
+      previews,
+      semanaIds: semanas.map(s => s.id)
+    });
 
     qc.invalidateQueries({ queryKey: ['lancamentos'] });
     setSuccess(`${previews.length} relatório(s) importado(s)`);

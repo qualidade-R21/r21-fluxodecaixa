@@ -30,12 +30,28 @@
       "type": "number",
       "default": 0
     },
-    "observacoes": {
-      "type": "string"
+    "banco_saldo_atual": {
+      "type": "string",
+      "description": "Banco ou tipo de aplica\u00e7\u00e3o do saldo atual"
     },
     "banco_aplicacao": {
       "type": "string",
-      "description": "Banco/tipo da aplica\u00e7\u00e3o financeira"
+      "description": "Banco/tipo da aplica\u00e7\u00e3o financeira (saldo aplicado)"
+    },
+    "banco_saldo_r21": {
+      "type": "string",
+      "description": "Banco ou tipo de aplica\u00e7\u00e3o do saldo R21"
+    },
+    "banco_decoracao": {
+      "type": "string",
+      "description": "Banco ou tipo de aplica\u00e7\u00e3o do saldo decora\u00e7\u00e3o"
+    },
+    "banco_inadimplencia": {
+      "type": "string",
+      "description": "Banco ou institui\u00e7\u00e3o da inadimpl\u00eancia"
+    },
+    "observacoes": {
+      "type": "string"
     }
   },
   "required": [

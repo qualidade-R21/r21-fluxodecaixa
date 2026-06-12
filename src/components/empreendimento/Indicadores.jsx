@@ -18,7 +18,11 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
     saldo_decoracao: saldoEmp?.saldo_decoracao || 0,
     inadimplencia: saldoEmp?.inadimplencia || 0,
     observacoes: saldoEmp?.observacoes || '',
-    banco_aplicacao: saldoEmp?.banco_aplicacao || ''
+    banco_saldo_atual: saldoEmp?.banco_saldo_atual || '',
+    banco_aplicacao: saldoEmp?.banco_aplicacao || '',
+    banco_saldo_r21: saldoEmp?.banco_saldo_r21 || '',
+    banco_decoracao: saldoEmp?.banco_decoracao || '',
+    banco_inadimplencia: saldoEmp?.banco_inadimplencia || ''
   });
 
   useEffect(() => {
@@ -29,7 +33,11 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
       saldo_decoracao: saldoEmp?.saldo_decoracao || 0,
       inadimplencia: saldoEmp?.inadimplencia || 0,
       observacoes: saldoEmp?.observacoes || '',
-      banco_aplicacao: saldoEmp?.banco_aplicacao || ''
+      banco_saldo_atual: saldoEmp?.banco_saldo_atual || '',
+      banco_aplicacao: saldoEmp?.banco_aplicacao || '',
+      banco_saldo_r21: saldoEmp?.banco_saldo_r21 || '',
+      banco_decoracao: saldoEmp?.banco_decoracao || '',
+      banco_inadimplencia: saldoEmp?.banco_inadimplencia || ''
     });
   }, [saldoEmp]);
 
@@ -45,11 +53,11 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
   };
 
   const items = [
-    { label: 'Saldo Atual', key: 'saldo_atual', show: true },
-    { label: 'Saldo Aplicado', key: 'saldo_aplicado', show: emp.tem_saldo_aplicado },
-    { label: 'Saldo Atual R21', key: 'saldo_atual_r21', show: emp.despesa_dividida_r21 },
-    { label: 'Saldo Decoração (Bradesco)', key: 'saldo_decoracao', show: emp.tem_saldo_decoracao },
-    { label: 'Inadimplência', key: 'inadimplencia', show: emp.tem_inadimplencia },
+    { label: 'Saldo Atual', key: 'saldo_atual', bancoKey: 'banco_saldo_atual', show: true },
+    { label: 'Saldo Aplicado', key: 'saldo_aplicado', bancoKey: 'banco_aplicacao', show: emp.tem_saldo_aplicado },
+    { label: 'Saldo Atual R21', key: 'saldo_atual_r21', bancoKey: 'banco_saldo_r21', show: emp.despesa_dividida_r21 },
+    { label: 'Saldo Decoração (Bradesco)', key: 'saldo_decoracao', bancoKey: 'banco_decoracao', show: emp.tem_saldo_decoracao },
+    { label: 'Inadimplência', key: 'inadimplencia', bancoKey: 'banco_inadimplencia', show: emp.tem_inadimplencia },
   ];
 
   const visibleItems = items.filter(i => i.show);
@@ -72,7 +80,6 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {visibleItems.map(item => {
             const isInadimplencia = item.key === 'inadimplencia';
-            const isSaldoAplicado = item.key === 'saldo_aplicado';
             return (
             <div key={item.key} className={`rounded-lg p-4 space-y-2 ${isInadimplencia ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
               <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">{item.label}</p>
@@ -85,23 +92,21 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
                     onChange={e => setForm({ ...form, [item.key]: parseFloat(e.target.value) || 0 })}
                     className="h-9 text-[15px]"
                   />
-                  {isSaldoAplicado && (
-                    <Input
-                      type="text"
-                      placeholder="Banco / tipo de aplicação"
-                      value={form.banco_aplicacao}
-                      onChange={e => setForm({ ...form, banco_aplicacao: e.target.value })}
-                      className="h-8 text-[13px]"
-                    />
-                  )}
+                  <Input
+                    type="text"
+                    placeholder="Banco / tipo de aplicação"
+                    value={form[item.bancoKey] || ''}
+                    onChange={e => setForm({ ...form, [item.bancoKey]: e.target.value })}
+                    className="h-8 text-[13px]"
+                  />
                 </div>
               ) : (
                 <div>
                   <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${isInadimplencia ? 'text-primary' : (form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
                     {formatBRL(form[item.key])}
                   </p>
-                  {isSaldoAplicado && form.banco_aplicacao && (
-                    <p className="text-[12px] text-muted-foreground mt-1">{form.banco_aplicacao}</p>
+                  {form[item.bancoKey] && (
+                    <p className="text-[12px] text-muted-foreground mt-1">{form[item.bancoKey]}</p>
                   )}
                 </div>
               )}

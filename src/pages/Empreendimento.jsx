@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
+import { useAfacSync } from '@/lib/useAfacSync';
+import { useQueryClient } from '@tanstack/react-query';
 import TabelaSemanas from '@/components/empreendimento/TabelaSemanas';
 import TabelaMultiProjetos from '@/components/empreendimento/TabelaMultiProjetos';
 import Indicadores from '@/components/empreendimento/Indicadores';
@@ -30,6 +32,19 @@ export default function Empreendimento() {
   const semanasOrdenadas = useMemo(() =>
     [...semanas].sort((a, b) => a.numero - b.numero), [semanas]
   );
+
+  // Cascata automática GC → RIC → GTR ao editar qualquer dado
+  const empAtivos = useMemo(() => empreendimentos.filter(e => e.ativo !== false), [empreendimentos]);
+  useAfacSync({
+    empreendimentos: empAtivos,
+    lancamentos,
+    saldos,
+    semanas: semanasOrdenadas,
+    socios,
+    participacoes,
+    projetos: projetos || [],
+    despesasProjetos,
+  });
 
   const saldoEmp = saldos.find(s => s.empreendimento_id === id);
   const empLancs = lancamentos.filter(l => l.empreendimento_id === id);

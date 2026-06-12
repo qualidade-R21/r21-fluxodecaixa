@@ -164,21 +164,9 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     setPreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const checkArchiveAndConfirm = async () => {
-    setLoading(true);
-    try {
-      const hoje = new Date().toISOString().split('T')[0];
-      const versoesHoje = await base44.entities.VersaoSemanal.filter({ data_referencia: hoje });
-      if (versoesHoje.length === 0) {
-        setLoading(false);
-        setShowArchiveWarning(true);
-      } else {
-        doConfirm();
-      }
-    } catch (e) {
-      setLoading(false);
-      setError('Erro ao verificar versões. Tente novamente.');
-    }
+  const checkArchiveAndConfirm = () => {
+    setLoading(false);
+    setShowArchiveWarning(true);
   };
 
   const handleArchiveFirst = async () => {

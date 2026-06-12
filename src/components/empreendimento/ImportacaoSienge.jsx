@@ -8,8 +8,9 @@ import { base44 } from '@/api/base44Client';
 import { formatBRL } from '@/lib/calculos';
 import { useQueryClient } from '@tanstack/react-query';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 async function pdfLines(arrayBuffer) {
   const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

@@ -174,11 +174,9 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       qc.invalidateQueries({ queryKey: ['versoesSemanais'] });
       setShowArchiveWarning(false);
       doConfirm();
-   } catch (e) {
-  console.error('Erro ao arquivar versão:', e);
-  setShowArchiveWarning(false);
-  setError(e?.response?.data?.error || e.message || 'Erro desconhecido');
-}
+    } catch (e) {
+      setShowArchiveWarning(false);
+      setError(e?.response?.data?.error || e.message || 'Erro desconhecido');
     } finally {
       setArchivePending(false);
     }

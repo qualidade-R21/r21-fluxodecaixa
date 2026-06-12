@@ -77,8 +77,10 @@ export function useAfacSync({
     if (!changed) return;
     lastAfacRef.current = newAfac;
 
-    // Update lancamentos asynchronously
+    // Coletar updates para enviar em lote
     const updateAfac = async () => {
+      const updates = [];
+      const creates = [];
       let dirty = false;
 
       for (const semana of semanas) {
@@ -87,9 +89,9 @@ export function useAfacSync({
         const lancGTR = lancamentos.find(l => l.empreendimento_id === empGTR.id && l.semana_id === semana.id);
         if (Math.abs((lancGTR?.despesa_afac || 0) - afacGTR) > 0.01) {
           if (lancGTR) {
-            await base44.entities.LancamentoSemanal.update(lancGTR.id, { despesa_afac: afacGTR });
+            updates.push({ id: lancGTR.id, data: { despesa_afac: afacGTR } });
           } else if (afacGTR !== 0) {
-            await base44.entities.LancamentoSemanal.create({ empreendimento_id: empGTR.id, semana_id: semana.id, despesa_afac: afacGTR });
+            creates.push({ empreendimento_id: empGTR.id, semana_id: semana.id, despesa_afac: afacGTR });
           }
           dirty = true;
         }
@@ -99,15 +101,16 @@ export function useAfacSync({
         const lancRIC = lancamentos.find(l => l.empreendimento_id === empRIC.id && l.semana_id === semana.id);
         if (Math.abs((lancRIC?.despesa_afac || 0) - afacRIC) > 0.01) {
           if (lancRIC) {
-            await base44.entities.LancamentoSemanal.update(lancRIC.id, { despesa_afac: afacRIC });
+            updates.push({ id: lancRIC.id, data: { despesa_afac: afacRIC } });
           } else if (afacRIC > 0) {
-            await base44.entities.LancamentoSemanal.create({ empreendimento_id: empRIC.id, semana_id: semana.id, despesa_afac: afacRIC });
+            creates.push({ empreendimento_id: empRIC.id, semana_id: semana.id, despesa_afac: afacRIC });
           }
           dirty = true;
         }
       }
 
       if (dirty) {
+        await base44.functions.invoke('sincronizarAfac', { updates, creates });
         qc.invalidateQueries({ queryKey: ['lancamentos'] });
       }
     };

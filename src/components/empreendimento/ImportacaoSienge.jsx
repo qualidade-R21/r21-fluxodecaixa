@@ -165,17 +165,19 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
   };
 
   const checkArchiveAndConfirm = async () => {
+    setLoading(true);
     try {
       const hoje = new Date().toISOString().split('T')[0];
       const versoesHoje = await base44.entities.VersaoSemanal.filter({ data_referencia: hoje });
       if (versoesHoje.length === 0) {
+        setLoading(false);
         setShowArchiveWarning(true);
       } else {
         doConfirm();
       }
     } catch (e) {
+      setLoading(false);
       setError('Erro ao verificar versões. Tente novamente.');
-      console.error(e);
     }
   };
 
@@ -188,8 +190,8 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       setShowArchiveWarning(false);
       doConfirm();
     } catch (e) {
+      setShowArchiveWarning(false);
       setError(`Erro ao arquivar: ${e?.response?.data?.error || e.message || 'Erro desconhecido'}`);
-      console.error(e);
     } finally {
       setArchivePending(false);
     }
@@ -243,6 +245,11 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
   if (previews.length > 0) {
     return (
       <div className="space-y-5">
+        {error && (
+          <div className="flex items-center gap-2 text-[13px] text-primary bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" /> {error}
+          </div>
+        )}
         {previews.map((preview, idx) => {
           const fieldAtual = preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
           const totalAtual = semanas.reduce((sum, s) => sum + getLancAtual(s.id, fieldAtual), 0);
@@ -321,8 +328,8 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
 
         <div className="flex items-center justify-end gap-3">
           <Button variant="outline" className="text-[15px]" onClick={() => setPreviews([])}>Cancelar</Button>
-          <Button className="text-[15px]" onClick={checkArchiveAndConfirm} disabled={loading}>
-            {loading ? 'Gravando...' : `Confirmar Importação${previews.length > 1 ? ` (${previews.length})` : ''}`}
+          <Button className="text-[15px]" onClick={checkArchiveAndConfirm} disabled={loading || archivePending}>
+            {loading || archivePending ? 'Gravando...' : `Confirmar Importação${previews.length > 1 ? ` (${previews.length})` : ''}`}
           </Button>
         </div>
       </div>

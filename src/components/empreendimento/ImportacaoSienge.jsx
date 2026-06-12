@@ -165,40 +165,59 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
   };
 
   const checkArchiveAndConfirm = async () => {
-    const hoje = new Date().toISOString().split('T')[0];
-    const versoesHoje = await base44.entities.VersaoSemanal.filter({ data_referencia: hoje });
-    if (versoesHoje.length === 0) {
-      setShowArchiveWarning(true);
-    } else {
-      doConfirm();
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      const versoesHoje = await base44.entities.VersaoSemanal.filter({ data_referencia: hoje });
+      if (versoesHoje.length === 0) {
+        setShowArchiveWarning(true);
+      } else {
+        doConfirm();
+      }
+    } catch (e) {
+      setError('Erro ao verificar versões. Tente novamente.');
+      console.error(e);
     }
   };
 
   const handleArchiveFirst = async () => {
     setArchivePending(true);
-    await base44.functions.invoke('arquivarVersaoSemanal', {});
-    qc.invalidateQueries({ queryKey: ['versoesSemanais'] });
-    setArchivePending(false);
-    setShowArchiveWarning(false);
-    doConfirm();
+    setError(null);
+    try {
+      await base44.functions.invoke('arquivarVersaoSemanal', {});
+      qc.invalidateQueries({ queryKey: ['versoesSemanais'] });
+      setShowArchiveWarning(false);
+      doConfirm();
+    } catch (e) {
+      setError(`Erro ao arquivar: ${e?.response?.data?.error || e.message || 'Erro desconhecido'}`);
+      console.error(e);
+    } finally {
+      setArchivePending(false);
+    }
   };
 
   const doConfirm = async () => {
     if (!previews.length) return;
     setLoading(true);
+    setError(null);
 
-    await base44.functions.invoke('importarSienge', {
-      empreendimento_id: emp.id,
-      ciclo_id: cicloId,
-      previews,
-      semanaIds: semanas.map(s => s.id)
-    });
+    try {
+      await base44.functions.invoke('importarSienge', {
+        empreendimento_id: emp.id,
+        ciclo_id: cicloId,
+        previews,
+        semanaIds: semanas.map(s => s.id)
+      });
 
-    qc.invalidateQueries({ queryKey: ['lancamentos'] });
-    setSuccess(`${previews.length} relatório(s) importado(s)`);
-    setPreviews([]);
-    setLoading(false);
-    if (onImported) onImported();
+      qc.invalidateQueries({ queryKey: ['lancamentos'] });
+      setSuccess(`${previews.length} relatório(s) importado(s)`);
+      setPreviews([]);
+      if (onImported) onImported();
+    } catch (e) {
+      setError(`Erro ao importar: ${e?.response?.data?.error || e.message || 'Erro desconhecido'}`);
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getSemanaLabel = (semanaId) => {

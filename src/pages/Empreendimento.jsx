@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import { useAfacSync } from '@/lib/useAfacSync';
-import { useQueryClient } from '@tanstack/react-query';
 import TabelaSemanas from '@/components/empreendimento/TabelaSemanas';
 import TabelaMultiProjetos from '@/components/empreendimento/TabelaMultiProjetos';
 import Indicadores from '@/components/empreendimento/Indicadores';

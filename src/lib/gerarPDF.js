@@ -399,8 +399,9 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
   // Aportes
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if ((emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && empParts.length > 0) {
-    const equalizacao = calcEqualizacao(empParts, aporteNecessario);
+    const equalizacao = calcEqualizacao(empParts, aporteNecessario, emp, socios);
     const eqComFator = calcFatorRateio(equalizacao);
+
 
     y = drawSectionTitle(doc, y, 'Resumo Valores Aportados (Equalização)');
     const eqHeads = ['Sócio', '% Soc.', 'Aportado', 'Devolvido', 'Saldo Dev.', '% Atual', 'Total Eq.', 'Aporte Nec.', 'Fator'];
@@ -589,9 +590,9 @@ export function gerarPDFGeral({
       if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
         saldoAtual = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
       }
-      const cap = calcContasAPagar(empLancs, semanas, despPorSemana);
+      const cap = calcContasAPagar(empLancs, semanas, emp, despPorSemana);
       const at = cap > saldoAtual ? cap - saldoAtual + (emp.margem_aporte_total || 0) : 0;
-      const eq = calcFatorRateio(calcEqualizacao(empParts, at));
+      const eq = calcFatorRateio(calcEqualizacao(empParts, at, emp, socios));
       const asAcumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanas, despPorSemana, projetos);
       const as = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eq, despPorSemana, projetos, asAcumulados);
       let grand = 0;

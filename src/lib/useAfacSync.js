@@ -4,20 +4,14 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados } from './calculos';
+import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, calcContasAPagar } from './calculos';
 
-function computeAportes(emp, empLancs, saldoEmp, semanas, participacoes, despPorSemana = {}, projetos = []) {
+function computeAportes(emp, empLancs, saldoEmp, semanas, participacoes, socios, despPorSemana = {}, projetos = []) {
   if (!emp) return {};
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if (empParts.length === 0) return {};
 
-  let contasAPagar = 0;
-  for (let i = 0; i < Math.min(4, semanas.length); i++) {
-    const s = semanas[i];
-    const lanc = empLancs.find(l => l.semana_id === s.id) || {};
-    const dp = despPorSemana[s.id] || 0;
-    contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0) + dp;
-  }
+  const contasAPagar = calcContasAPagar(empLancs, semanas, emp, despPorSemana, 4);
 
   let saldoAtual = saldoEmp?.saldo_atual || 0;
   if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
@@ -25,7 +19,7 @@ function computeAportes(emp, empLancs, saldoEmp, semanas, participacoes, despPor
   }
 
   const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
-  const eq = calcEqualizacao(empParts, aporteTotal);
+  const eq = calcEqualizacao(empParts, aporteTotal, emp, socios);
   const eqF = calcFatorRateio(eq);
   const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanas, despPorSemana, projetos);
   return calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eqF, despPorSemana, projetos, acumulados);
@@ -59,7 +53,7 @@ export function useAfacSync({
         .filter(d => projetoIds.includes(d.projeto_id) && d.semana_id === s.id)
         .reduce((sum, d) => sum + (d.valor_despesa || 0), 0);
     });
-    const aportesGC = computeAportes(soloGC, gcLancs, gcSaldo, semanas, participacoes, gcDespPorSemana, projetos);
+    const aportesGC = computeAportes(soloGC, gcLancs, gcSaldo, semanas, participacoes, socios, gcDespPorSemana, projetos);
 
     // 2. Computar RIC afac e saldos acumulados localmente (para derivar GTR afac)
     const ricLancs = lancamentos.filter(l => l.empreendimento_id === empRIC.id);

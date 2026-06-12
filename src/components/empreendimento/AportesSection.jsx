@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana } from '@/lib/calculos';
+import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcContasAPagar } from '@/lib/calculos';
 
 export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, participacoes, socios, despesasPorSemana, projetosInternos, acumulados }) {
   if (emp.tipo_fluxo !== 'com_aportes' && emp.tipo_fluxo !== 'multi_projetos') return null;
@@ -9,13 +9,8 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if (empParts.length === 0) return null;
 
-  let contasAPagar = 0;
-  for (let i = 0; i < Math.min(4, semanas.length); i++) {
-    const s = semanas[i];
-    const lanc = lancamentos.find(l => l.semana_id === s.id && l.empreendimento_id === emp.id) || {};
-    const despP = despesasPorSemana?.[s.id] || 0;
-    contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0) + despP;
-  }
+  const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
+  const contasAPagar = calcContasAPagar(empLancs, semanas, emp, despesasPorSemana || {}, 4);
 
   let saldoAtual = saldoEmp?.saldo_atual || 0;
   if (emp.tipo_fluxo === 'multi_projetos' && projetosInternos?.length > 0) {
@@ -23,7 +18,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
   }
 
   const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
-  const equalizacao = calcEqualizacao(empParts, aporteTotal);
+  const equalizacao = calcEqualizacao(empParts, aporteTotal, emp, socios);
   const eqComFator = calcFatorRateio(equalizacao);
   const aportesSemana = calcAportesPorSemana(lancamentos, emp, saldoEmp, semanas, eqComFator, despesasPorSemana, projetosInternos, acumulados);
 

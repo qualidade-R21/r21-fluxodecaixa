@@ -55,7 +55,7 @@ export default function Empreendimento() {
   const [numSemanasContas, setNumSemanasContas] = useState(4);
 
   const contasAPagar = useMemo(() =>
-    calcContasAPagar(empLancs, semanasOrdenadas, despPorSemana, numSemanasContas),
+    calcContasAPagar(empLancs, semanasOrdenadas, emp || {}, despPorSemana, numSemanasContas),
     [empLancs, semanasOrdenadas, despPorSemana, numSemanasContas]
   );
 

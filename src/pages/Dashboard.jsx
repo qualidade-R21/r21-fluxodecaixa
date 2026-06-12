@@ -70,7 +70,7 @@ export default function Dashboard() {
       }
 
       const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projetos);
-      const contasAPagar = calcContasAPagar(empLancs, semanasOrdenadas, despPorSemana, numSemanasContas);
+      const contasAPagar = calcContasAPagar(empLancs, semanasOrdenadas, emp, despPorSemana, numSemanasContas);
       
       let saldoAtual = saldoEmp?.saldo_atual || 0;
       if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {

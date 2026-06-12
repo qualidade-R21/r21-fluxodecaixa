@@ -42,13 +42,7 @@ export default function AportesRicardo() {
       });
     }
 
-    let contasAPagar = 0;
-    for (let i = 0; i < Math.min(4, semanasOrdenadas.length); i++) {
-      const s = semanasOrdenadas[i];
-      const lanc = empLancs.find(l => l.semana_id === s.id) || {};
-      const dp = despPorSemana[s.id] || 0;
-      contasAPagar += (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_afac || 0) + dp;
-    }
+    const contasAPagar = calcContasAPagar(empLancs, semanasOrdenadas, emp, despPorSemana, 4);
 
     let saldoAtual = saldoEmp?.saldo_atual || 0;
     if (emp.tipo_fluxo === 'multi_projetos' && projs.length > 0) {
@@ -56,7 +50,7 @@ export default function AportesRicardo() {
     }
 
     const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
-    const eq = calcEqualizacao(empParts, aporteTotal);
+    const eq = calcEqualizacao(empParts, aporteTotal, emp, socios);
     const eqF = calcFatorRateio(eq);
     const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projs);
     return calcAportesPorSemana(empLancs, emp, saldoEmp, semanasOrdenadas, eqF, despPorSemana, projs, acumulados);
@@ -74,12 +68,8 @@ export default function AportesRicardo() {
   const aportesSolenne = useMemo(() => getAportes('Solenne'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas]);
   const aportesGrupoGC = useMemo(() => getAportes('Green Concept'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, projetos, despesasProjetos]);
 
-  // Build rows
+  // Build rows (4 linhas conforme especificação)
   const rows = [
-    {
-      label: 'Ponta do Lobo (Total)',
-      getData: (semanaId) => aportesPontaDoLobo[semanaId]?.total || 0,
-    },
     {
       label: 'Lisboa (GTR na Solenne)',
       getData: (semanaId) => aportesSolenne[semanaId]?.porSocio[socioGTR?.id] || 0,
@@ -93,11 +83,11 @@ export default function AportesRicardo() {
       },
     },
     {
-      label: 'Ricardo (Ponta do Lobo)',
+      label: 'Ponta do Lobo (Ricardo)',
       getData: (semanaId) => aportesPontaDoLobo[semanaId]?.porSocio[socioRicardo?.id] || 0,
     },
     {
-      label: 'RIC (Grupo GC)',
+      label: 'Green Concept (RIC)',
       getData: (semanaId) => aportesGrupoGC[semanaId]?.porSocio[socioRIC?.id] || 0,
     },
   ];

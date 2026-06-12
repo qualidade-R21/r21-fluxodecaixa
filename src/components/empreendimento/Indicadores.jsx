@@ -88,8 +88,8 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
                   <Input
                     type="number"
                     step="0.01"
-                    value={form[item.key]}
-                    onChange={e => setForm({ ...form, [item.key]: parseFloat(e.target.value) || 0 })}
+                    value={form[item.key] === 0 ? '' : form[item.key]}
+                    onChange={e => setForm({ ...form, [item.key]: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })}
                     className="h-9 text-[15px]"
                   />
                   <Input

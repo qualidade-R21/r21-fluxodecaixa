@@ -8,17 +8,16 @@ Deno.serve(async (req) => {
 
     const { empreendimento_id, ciclo_id, previews, semanaIds } = await req.json();
 
+    // Buscar lancamentos existentes UMA vez (fora do loop)
+    const existing = await base44.asServiceRole.entities.LancamentoSemanal.filter({
+      empreendimento_id,
+      semana_id: { $in: semanaIds }
+    });
+    const existingMap = {};
+    existing.forEach(l => { existingMap[l.semana_id] = l; });
+
     for (const preview of previews) {
       const field = preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
-
-      // Buscar lancamentos existentes deste empreendimento para estas semanas
-      const existing = await base44.asServiceRole.entities.LancamentoSemanal.filter({
-        empreendimento_id,
-        semana_id: { $in: semanaIds }
-      });
-
-      const existingMap = {};
-      existing.forEach(l => { existingMap[l.semana_id] = l; });
 
       const updates = [];
       const creates = [];

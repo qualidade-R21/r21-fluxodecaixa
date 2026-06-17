@@ -6,13 +6,18 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatBRL } from '@/lib/calculos';
-import { Eye, History, Calendar, User } from 'lucide-react';
+import { Eye, History, Calendar, User, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 export default function Historico() {
   const navigate = useNavigate();
   const { data: empreendimentos } = useEmpreendimentos();
   const [filtroEmp, setFiltroEmp] = useState('todos');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const qc = useQueryClient();
 
   const { data: versoes, isLoading } = useQuery({
     queryKey: ['versoesSemanais'],
@@ -26,6 +31,15 @@ export default function Historico() {
         const empIds = (snapshot.empreendimentos || []).map(e => e.id);
         return empIds.includes(filtroEmp);
       });
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    await base44.entities.VersaoSemanal.delete(deleteTarget.id);
+    qc.invalidateQueries({ queryKey: ['versoesSemanais'] });
+    setDeleting(false);
+    setDeleteTarget(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -88,15 +102,26 @@ export default function Historico() {
                         </div>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => navigate(`/historico/${versao.id}`)}
-                    >
-                      <Eye className="w-4 h-4" />
-                      Visualizar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => navigate(`/historico/${versao.id}`)}
+                      >
+                        <Eye className="w-4 h-4" />
+                        Visualizar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                        onClick={() => setDeleteTarget(versao)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Excluir
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
@@ -126,6 +151,24 @@ export default function Historico() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir versão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a versão de <strong>{deleteTarget?.data_referencia}</strong>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

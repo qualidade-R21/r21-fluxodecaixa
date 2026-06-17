@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
@@ -6,13 +6,17 @@ import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } fro
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileDown, FileText } from 'lucide-react';
+import { FileDown, FileText, Trash2, AlertTriangle } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useQueryClient } from '@tanstack/react-query';
 import { gerarPDFGeral, gerarPDFEmpreendimento } from '@/lib/gerarPDF';
-import { useMemo } from 'react';
 
 export default function Relatorios() {
   const { data: empreendimentos } = useEmpreendimentos();
   const { data: cicloAtivo } = useCicloAtivo();
+  const [showCleanup, setShowCleanup] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const qc = useQueryClient();
   const { data: semanas } = useSemanas(cicloAtivo?.id);
   const semanaIds = useMemo(() => semanas.map(s => s.id), [semanas]);
   const { data: lancamentos } = useLancamentos(cicloAtivo?.id, semanaIds);
@@ -169,6 +173,60 @@ export default function Relatorios() {
           <ImportLog />
         </CardContent>
       </Card>
+
+      {/* Limpar dados de teste */}
+      <Card className="border-destructive/30">
+        <CardHeader className="pb-3 px-6 pt-6">
+          <CardTitle className="text-[18px] font-heading font-medium text-destructive flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Limpar dados de teste
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-6 pb-6">
+          <p className="text-[14px] text-muted-foreground mb-4">
+            Remove todos os lançamentos, saldos, versões arquivadas e logs de importação. Use para zerar o app e recomeçar.
+            Empreendimentos, ciclos, sócios e projetos internos <strong>não</strong> serão afetados.
+          </p>
+          <Button variant="destructive" onClick={() => setShowCleanup(true)} className="gap-2">
+            <Trash2 className="w-4 h-4" />
+            Zerar todos os dados
+          </Button>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showCleanup} onOpenChange={setShowCleanup}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Confirmar exclusão total
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação vai <strong>excluir permanentemente</strong> todos os lançamentos semanais, saldos, versões arquivadas e logs de importação.
+              Não será possível desfazer. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cleaning}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cleaning}
+              onClick={async () => {
+                setCleaning(true);
+                try {
+                  await base44.functions.invoke('limparDadosTeste', {});
+                  qc.invalidateQueries();
+                } finally {
+                  setCleaning(false);
+                  setShowCleanup(false);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {cleaning ? 'Limpando...' : 'Sim, excluir tudo'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

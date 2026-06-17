@@ -27,6 +27,10 @@
     },
     "usuario": {
       "type": "string"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL do arquivo PDF importado"
     }
   },
   "required": [

@@ -121,7 +121,8 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       totalExtraido,
       porSemana,
       fora,
-      fileNome: file.name
+      fileNome: file.name,
+      file
     };
   };
 
@@ -189,11 +190,23 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     setError(null);
 
     try {
+      // Upload files and collect URLs
+      const fileUrls = [];
+      for (const p of previews) {
+        if (p.file) {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: p.file });
+          fileUrls.push(file_url);
+        } else {
+          fileUrls.push(null);
+        }
+      }
+
       await base44.functions.invoke('importarSienge', {
         empreendimento_id: emp.id,
         ciclo_id: cicloId,
         previews,
-        semanaIds: semanas.map(s => s.id)
+        semanaIds: semanas.map(s => s.id),
+        fileUrls
       });
 
       qc.invalidateQueries({ queryKey: ['lancamentos'] });

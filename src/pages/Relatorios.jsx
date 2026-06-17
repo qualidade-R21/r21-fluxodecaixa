@@ -236,6 +236,12 @@ function ImportLog() {
     queryKey: ['registrosImportacao'],
     queryFn: () => base44.entities.RegistroImportacao.list('-created_date', 30),
   });
+  const { data: empreendimentos } = useEmpreendimentos();
+
+  const getEmpNome = (empId) => {
+    const emp = empreendimentos?.find(e => e.id === empId);
+    return emp?.nome || empId;
+  };
 
   if (!registros || registros.length === 0) {
     return <p className="text-muted-foreground text-[14px]">Nenhuma importação registrada.</p>;
@@ -247,18 +253,30 @@ function ImportLog() {
         <thead>
           <tr className="border-b-2 border-border">
             <th className="text-left py-2 px-3 font-heading text-[12px] uppercase tracking-wide text-[#4A4A4A]">Data</th>
+            <th className="text-left py-2 px-3 font-heading text-[12px] uppercase tracking-wide text-[#4A4A4A]">Empreendimento</th>
             <th className="text-left py-2 px-3 font-heading text-[12px] uppercase tracking-wide text-[#4A4A4A]">Arquivo</th>
             <th className="text-left py-2 px-3 font-heading text-[12px] uppercase tracking-wide text-[#4A4A4A]">Tipo</th>
             <th className="text-left py-2 px-3 font-heading text-[12px] uppercase tracking-wide text-[#4A4A4A]">Usuário</th>
+            <th className="text-center py-2 px-3 font-heading text-[12px] uppercase tracking-wide text-[#4A4A4A] w-[100px]">Visualizar</th>
           </tr>
         </thead>
         <tbody>
           {registros.map(r => (
             <tr key={r.id} className="border-b border-border">
-              <td className="py-2 px-3">{new Date(r.created_date).toLocaleString('pt-BR')}</td>
-              <td className="py-2 px-3">{r.nome_arquivo}</td>
+              <td className="py-2 px-3 whitespace-nowrap">{new Date(r.created_date).toLocaleString('pt-BR')}</td>
+              <td className="py-2 px-3 whitespace-nowrap">{getEmpNome(r.empreendimento_id)}</td>
+              <td className="py-2 px-3 truncate max-w-[200px]">{r.nome_arquivo}</td>
               <td className="py-2 px-3 capitalize">{r.tipo}</td>
               <td className="py-2 px-3">{r.usuario || '—'}</td>
+              <td className="py-2 px-3 text-center">
+                {r.file_url ? (
+                  <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-[13px] font-medium">
+                    Abrir PDF
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground text-[13px]">—</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

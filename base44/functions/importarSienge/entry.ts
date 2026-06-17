@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { empreendimento_id, ciclo_id, previews, semanaIds } = await req.json();
+    const { empreendimento_id, ciclo_id, previews, semanaIds, fileUrls } = await req.json();
 
     // Buscar lancamentos existentes UMA vez (fora do loop)
     const existing = await base44.asServiceRole.entities.LancamentoSemanal.filter({
@@ -16,7 +16,8 @@ Deno.serve(async (req) => {
     const existingMap = {};
     existing.forEach(l => { existingMap[l.semana_id] = l; });
 
-    for (const preview of previews) {
+    for (let i = 0; i < previews.length; i++) {
+      const preview = previews[i];
       const field = preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
 
       const updates = [];
@@ -39,13 +40,17 @@ Deno.serve(async (req) => {
       if (updates.length) await Promise.all(updates);
       if (creates.length) await base44.asServiceRole.entities.LancamentoSemanal.bulkCreate(creates);
 
-      await base44.asServiceRole.entities.RegistroImportacao.create({
+      const registroData = {
         empreendimento_id,
         ciclo_id,
         nome_arquivo: preview.fileNome,
         tipo: preview.tipo,
         total_extraido: preview.totalExtraido,
-      });
+      };
+      if (fileUrls && fileUrls[i]) {
+        registroData.file_url = fileUrls[i];
+      }
+      await base44.asServiceRole.entities.RegistroImportacao.create(registroData);
     }
 
     return Response.json({ success: true, count: previews.length });

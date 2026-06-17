@@ -2,8 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Upload, CheckCircle, X, AlertTriangle, FileText, Archive } from 'lucide-react';
+import { Upload, CheckCircle, X, AlertTriangle, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatBRL } from '@/lib/calculos';
 import { useQueryClient } from '@tanstack/react-query';
@@ -92,8 +91,6 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
   const [previews, setPreviews] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [showArchiveWarning, setShowArchiveWarning] = useState(false);
-  const [archivePending, setArchivePending] = useState(false);
   const inputRef = useRef();
   const qc = useQueryClient();
 
@@ -160,28 +157,6 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
 
   const removePreview = (idx) => {
     setPreviews(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  const checkArchiveAndConfirm = () => {
-    setLoading(false);
-    setShowArchiveWarning(true);
-  };
-
-  const handleArchiveFirst = async () => {
-    setArchivePending(true);
-    setError(null);
-    try {
-      await base44.functions.invoke('arquivarVersaoSemanal', {});
-      qc.invalidateQueries({ queryKey: ['versoesSemanais'] });
-      setShowArchiveWarning(false);
-      doConfirm();
-    } catch (e) {
-      console.error('Erro ao arquivar versão:', e);
-      setShowArchiveWarning(false);
-      setError(e?.response?.data?.error || e.message || 'Erro desconhecido');
-    } finally {
-      setArchivePending(false);
-    }
   };
 
   const doConfirm = async () => {
@@ -327,33 +302,11 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
 
         <div className="flex items-center justify-end gap-3">
           <Button variant="outline" className="text-[15px]" onClick={() => setPreviews([])}>Cancelar</Button>
-          <Button className="text-[15px]" onClick={checkArchiveAndConfirm} disabled={loading || archivePending}>
-            {loading || archivePending ? 'Gravando...' : `Confirmar Importação${previews.length > 1 ? ` (${previews.length})` : ''}`}
+          <Button className="text-[15px]" onClick={doConfirm} disabled={loading}>
+            {loading ? 'Gravando...' : `Confirmar Importação${previews.length > 1 ? ` (${previews.length})` : ''}`}
           </Button>
         </div>
 
-        <AlertDialog open={showArchiveWarning} onOpenChange={setShowArchiveWarning}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Archive className="w-5 h-5" />
-              Deseja arquivar a versão atual antes de atualizar?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-[15px]">
-              Nenhuma versão foi arquivada hoje. Recomendamos arquivar o estado atual
-              antes de sobrescrever os valores com a importação.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel disabled={archivePending} onClick={() => { setShowArchiveWarning(false); doConfirm(); }}>
-              Importar sem arquivar
-            </AlertDialogCancel>
-            <AlertDialogAction disabled={archivePending} onClick={handleArchiveFirst} className="gap-2">
-              {archivePending ? 'Arquivando...' : 'Arquivar e depois importar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       </div>
     );
   }

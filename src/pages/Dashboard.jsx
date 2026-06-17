@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import EmpreendimentoCard from '@/components/dashboard/EmpreendimentoCard';
+import ComoAtualizarPanel from '@/components/dashboard/ComoAtualizarPanel';
 import SaldoChart from '@/components/dashboard/SaldoChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -190,6 +191,8 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
+
+      <ComoAtualizarPanel />
 
       {/* Cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">

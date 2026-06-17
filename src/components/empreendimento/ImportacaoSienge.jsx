@@ -318,13 +318,8 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
             {loading || archivePending ? 'Gravando...' : `Confirmar Importação${previews.length > 1 ? ` (${previews.length})` : ''}`}
           </Button>
         </div>
-      </div>
-    );
-  }
 
-  return (
-    <div>
-      <AlertDialog open={showArchiveWarning} onOpenChange={setShowArchiveWarning}>
+        <AlertDialog open={showArchiveWarning} onOpenChange={setShowArchiveWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -346,7 +341,12 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
+    );
+  }
 
+  return (
+    <div>
       <div
         className={`border-2 border-dashed rounded-lg px-6 py-4 text-center transition-colors cursor-pointer ${
           dragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/30'

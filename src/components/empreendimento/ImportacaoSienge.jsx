@@ -82,9 +82,11 @@ function parseSienge(lines, semanasDoCiclo) {
   });
 
   // Recalcula semanas a partir da data do cabeçalho, mantendo os IDs do banco
+  // Fallback: usa a menor data encontrada no daily se não houver cabeçalho de período
   let effectiveSemanas = semanasDoCiclo;
-  if (periodoInicio && semanasDoCiclo.length > 0) {
-    const [pd, pm, py] = periodoInicio.split('/').map(Number);
+  const dataInicio = periodoInicio || (Object.keys(daily).sort()[0] || null);
+  if (dataInicio && semanasDoCiclo.length > 0) {
+    const [pd, pm, py] = dataInicio.split('/').map(Number);
     const startDate = new Date(py, pm - 1, pd);
     effectiveSemanas = semanasDoCiclo.map((w, i) => {
       const inicio = new Date(startDate);

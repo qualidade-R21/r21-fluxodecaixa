@@ -78,7 +78,7 @@ function parseSienge(lines, semanasDoCiclo) {
     const dt = new Date(y, mo - 1, d);
     let hit = false;
     effectiveSemanas.forEach((w, i) => {
-      if (dt >= w.inicio && dt <= w.fim) { sem[i] += daily[k]; hit = true; }
+      if (dt >= new Date(w.inicio) && dt <= new Date(w.fim)) { sem[i] += daily[k]; hit = true; }
     });
     if (!hit) fora += daily[k];
   });

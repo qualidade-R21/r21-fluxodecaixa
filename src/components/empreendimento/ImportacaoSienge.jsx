@@ -70,7 +70,7 @@ function parseSienge(lines, semanasDoCiclo) {
     }
   });
 
-  const effectiveSemanas = semanasDoCiclo;
+  let effectiveSemanas = semanasDoCiclo;
   const sem = effectiveSemanas.map(() => 0);
   let fora = 0;
   Object.keys(daily).forEach(k => {

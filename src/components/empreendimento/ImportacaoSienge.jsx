@@ -23,7 +23,7 @@ async function pdfLines(arrayBuffer) {
     });
     pts.sort((a, b) => a.y - b.y || a.x - b.x);
     let row = [], ly = null;
-    pts.forEach(pt => {
+    pts.forEach(pt => {s
       if (ly === null || Math.abs(pt.y - ly) <= 2.5) { row.push(pt); if (ly === null) ly = pt.y; }
       else {
         lines.push(row.sort((a, b) => a.x - b.x).map(i => i.s).join(' ').replace(/\s+/g, ' ').trim());
@@ -47,8 +47,19 @@ function parseSienge(lines, semanasDoCiclo) {
   let totalEmpresa = null;
   let nomeEmpresa = null;
 
+  // Extrai data de início do cabeçalho do relatório (período do relatório)
+  let periodoInicio = null;
+  for (const l of lines) {
+    const mPer = l.match(/[Pp]er[ií]odo[^\d]*(\d{2}\/\d{2}\/\d{4})/);
+    if (mPer) { periodoInicio = mPer[1]; break; }
+    const mEmi = l.match(/[Ee]miss[ãa]o[^\d]*(\d{2}\/\d{2}\/\d{4})/);
+    if (mEmi) { periodoInicio = mEmi[1]; break; }
+    const mRange = l.match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+\d{2}\/\d{2}\/\d{4}/);
+    if (mRange) { periodoInicio = mRange[1]; break; }
+  }
+
   lines.forEach(l => {
-    const mEmp = l.match(/empresa\s*\d+\s*[-–]\s*(.+)/i);
+    const mEmp = l.match(/empresa\s*\d+\s*[-\u2013]\s*(.+)/i);
     if (mEmp) nomeEmpresa = mEmp[1].trim();
 
     if (/total\s+da\s+empresa/i.test(l)) {
@@ -70,13 +81,28 @@ function parseSienge(lines, semanasDoCiclo) {
     }
   });
 
-  const sem = semanasDoCiclo.map(() => 0);
+  // Recalcula semanas a partir da data do cabeçalho, mantendo os IDs do banco
+  let effectiveSemanas = semanasDoCiclo;
+  if (periodoInicio && semanasDoCiclo.length > 0) {
+    const [pd, pm, py] = periodoInicio.split('/').map(Number);
+    const startDate = new Date(py, pm - 1, pd);
+    effectiveSemanas = semanasDoCiclo.map((w, i) => {
+      const inicio = new Date(startDate);
+      inicio.setDate(inicio.getDate() + i * 7);
+      const fim = new Date(inicio);
+      fim.setDate(fim.getDate() + 6);
+      fim.setHours(23, 59, 59);
+      return { id: w.id, inicio, fim };
+    });
+  }
+
+  const sem = effectiveSemanas.map(() => 0);
   let fora = 0;
   Object.keys(daily).forEach(k => {
     const [d, mo, y] = k.split('/').map(Number);
     const dt = new Date(y, mo - 1, d);
     let hit = false;
-    semanasDoCiclo.forEach((w, i) => {
+    effectiveSemanas.forEach((w, i) => {
       if (dt >= w.inicio && dt <= w.fim) { sem[i] += daily[k]; hit = true; }
     });
     if (!hit) fora += daily[k];

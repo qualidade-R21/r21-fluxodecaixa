@@ -47,17 +47,6 @@ function parseSienge(lines, semanasDoCiclo) {
   let totalEmpresa = null;
   let nomeEmpresa = null;
 
-  // Extrai data de início do cabeçalho do relatório (período do relatório)
-  let periodoInicio = null;
-  for (const l of lines) {
-    const mPer = l.match(/[Pp]er[ií]odo[^\d]*(\d{2}\/\d{2}\/\d{4})/);
-    if (mPer) { periodoInicio = mPer[1]; break; }
-    const mEmi = l.match(/[Ee]miss[ãa]o[^\d]*(\d{2}\/\d{2}\/\d{4})/);
-    if (mEmi) { periodoInicio = mEmi[1]; break; }
-    const mRange = l.match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+\d{2}\/\d{2}\/\d{4}/);
-    if (mRange) { periodoInicio = mRange[1]; break; }
-  }
-
   lines.forEach(l => {
     const mEmp = l.match(/empresa\s*\d+\s*[-\u2013]\s*(.+)/i);
     if (mEmp) nomeEmpresa = mEmp[1].trim();
@@ -81,19 +70,7 @@ function parseSienge(lines, semanasDoCiclo) {
     }
   });
 
-  // Usa periodoInicio apenas para alinhar com a semana correta do banco
-  // Fallback: usa a menor data encontrada no daily se não houver cabeçalho de período
-  let effectiveSemanas = semanasDoCiclo;
-  const dataInicio = periodoInicio || (Object.keys(daily).sort()[0] || null);
-  if (dataInicio && semanasDoCiclo.length > 0) {
-    const [pd, pm, py] = dataInicio.split('/').map(Number);
-    const reportStart = new Date(py, pm - 1, pd);
-    const offset = semanasDoCiclo.findIndex(w => reportStart >= w.inicio && reportStart <= w.fim);
-    if (offset >= 0) {
-      effectiveSemanas = semanasDoCiclo.slice(offset);
-    }
-  }
-
+  const effectiveSemanas = semanasDoCiclo;
   const sem = effectiveSemanas.map(() => 0);
   let fora = 0;
   Object.keys(daily).forEach(k => {

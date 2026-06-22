@@ -23,7 +23,7 @@ async function pdfLines(arrayBuffer) {
     });
     pts.sort((a, b) => a.y - b.y || a.x - b.x);
     let row = [], ly = null;
-    pts.forEach(pt => {s
+    pts.forEach(pt => {
       if (ly === null || Math.abs(pt.y - ly) <= 2.5) { row.push(pt); if (ly === null) ly = pt.y; }
       else {
         lines.push(row.sort((a, b) => a.x - b.x).map(i => i.s).join(' ').replace(/\s+/g, ' ').trim());

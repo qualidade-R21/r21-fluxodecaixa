@@ -9,9 +9,16 @@ Deno.serve(async (req) => {
     const { updates, creates } = await req.json();
 
     if (updates && updates.length) {
-      await Promise.all(updates.map(u =>
-        base44.asServiceRole.entities.LancamentoSemanal.update(u.id, u.data)
-      ));
+      await Promise.all(updates.map(async (u) => {
+        try {
+          await base44.asServiceRole.entities.LancamentoSemanal.update(u.id, u.data);
+        } catch (e) {
+          // Record may have been deleted — fall back to create
+          if (u.data && u.data.semana_id && u.data.empreendimento_id) {
+            await base44.asServiceRole.entities.LancamentoSemanal.create(u.data);
+          }
+        }
+      }));
     }
 
     if (creates && creates.length) {

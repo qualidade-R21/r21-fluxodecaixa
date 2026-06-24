@@ -38,6 +38,7 @@ async function pdfLines(arrayBuffer) {
 function parseSienge(lines, semanasDoCiclo) {
   const brnum = s => parseFloat(s.replace(/\./g, '').replace(',', '.'));
   const txt = lines.join('\n');
+  const mPeriodo = txt.match(/Per[ií]odo\s+(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
   const tipo = /contas a pagar/i.test(txt) ? 'despesas'
              : /contas a receber/i.test(txt) ? 'receitas' : null;
 

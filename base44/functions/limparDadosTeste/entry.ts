@@ -1,9 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -26,15 +22,16 @@ Deno.serve(async (req) => {
     const resultados = {};
 
     for (const nome of entidades) {
-      const registros = await sr.entities[nome].list('', 100);
-      await sleep(1000);
-
-      for (const r of registros) {
-        await sr.entities[nome].delete(r.id);
-        await sleep(200);
+      const registros = await sr.entities[nome].list('', 500);
+      const count = registros.length;
+      let remaining = count;
+      while (remaining > 0) {
+        const batchSize = Math.min(remaining, 500);
+        const ids = registros.slice(count - remaining, count - remaining + batchSize).map(r => r.id);
+        await sr.entities[nome].deleteMany({ id: { $in: ids } });
+        remaining -= batchSize;
       }
-
-      resultados[nome] = registros.length;
+      resultados[nome] = count;
     }
 
     return Response.json({ success: true, deletados: resultados });

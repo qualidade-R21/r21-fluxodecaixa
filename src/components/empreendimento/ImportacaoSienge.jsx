@@ -85,7 +85,7 @@ function parseSienge(lines, semanasDoCiclo) {
     if (!hit) fora += daily[k];
   });
 
-  return { tipo, nomeEmpresa, totalEmpresa, sem, fora };
+  return { tipo, nomeEmpresa, totalEmpresa, sem, fora, periodoInicio };
 }
 
 export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, onImported }) {

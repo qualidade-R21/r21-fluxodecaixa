@@ -281,7 +281,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
                       const d = extraido - atual;
                       return (
                         <tr key={s.id} className={`border-b border-[#E5E5E5] ${si % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
-                          <td className="py-2 px-3 font-medium">{getSemanaLabel(s.id)}</td>
+                          <td className="py-2 px-3 font-medium">{si === 0 && preview.periodoInicio ? `${preview.periodoInicio.substring(0, 5)} - ${getSemanaLabel(s.id).split(' - ')[1]}` : getSemanaLabel(s.id)}</td>
                           <td className="text-right py-2 px-3 tabular-nums">{formatBRL(extraido)}</td>
                           <td className="text-right py-2 px-3 tabular-nums text-muted-foreground">{formatBRL(atual)}</td>
                           <td className={`text-right py-2 px-3 tabular-nums font-medium ${d !== 0 ? (d > 0 ? 'text-green-600' : 'text-primary') : 'text-muted-foreground'}`}>

@@ -119,14 +119,14 @@ export default function Dashboard() {
   const [novoCicloOpen, setNovoCicloOpen] = useState(false);
 
   const handleArquivar = async () => {
-    try {
-      await base44.functions.invoke('arquivarVersaoSemanal', {});
-      queryClient.invalidateQueries({ queryKey: ['versoesSemanais'] });
-    } catch (err) {
-      alert('Erro ao arquivar versão: ' + (err?.message || 'Tente novamente.'));
-      console.error(err);
-    }
-  };
+  try {
+    await base44.functions.invoke('arquivarVersaoSemanal', {});
+    queryClient.invalidateQueries({ queryKey: ['versoesSemanais'] });
+  } catch (err) {
+    alert('Erro ao arquivar versão: ' + (err?.message || 'Tente novamente.'));
+    console.error(err);
+  }
+};
 
   const handleGerarPDFGeral = () => {
     gerarPDFGeral({

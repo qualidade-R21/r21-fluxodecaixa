@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { addDays, format } from 'npm:date-fns@3.6.0';
 
 Deno.serve(async (req) => {
   try {
@@ -101,6 +102,21 @@ Deno.serve(async (req) => {
         registroData.file_url = fileUrls[i];
       }
       await base44.asServiceRole.entities.RegistroImportacao.create(registroData);
+    }
+
+    // Atualizar rótulos das semanas com as datas reais do relatório
+    const previewComPeriodo = previews.find(p => p.periodoInicio);
+    if (previewComPeriodo) {
+      const [d, mo, y] = previewComPeriodo.periodoInicio.split('/').map(Number);
+      const startDate = new Date(y, mo - 1, d);
+      const semanas = await base44.asServiceRole.entities.Semana.filter({ ciclo_id });
+      semanas.sort((a, b) => a.numero - b.numero);
+      for (let i = 0; i < semanas.length; i++) {
+        const inicio = addDays(startDate, i * 7);
+        const fim = addDays(inicio, 6);
+        const rotulo = `${format(inicio, 'dd/MM')} - ${format(fim, 'dd/MM')}`;
+        await base44.asServiceRole.entities.Semana.update(semanas[i].id, { rotulo });
+      }
     }
 
     return Response.json({ success: true, count: previews.length });

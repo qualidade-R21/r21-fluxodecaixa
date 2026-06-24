@@ -114,7 +114,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     }));
 
     const lines = await pdfLines(arrayBuffer);
-    const { tipo, nomeEmpresa, totalEmpresa, sem, fora } = parseSienge(lines, semanasDoCiclo);
+    const { tipo, nomeEmpresa, totalEmpresa, sem, fora, periodoInicio } = parseSienge(lines, semanasDoCiclo);
 
     if (!tipo) return null;
 
@@ -129,6 +129,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       totalExtraido,
       porSemana,
       fora,
+      periodoInicio,
       fileNome: file.name,
       file
     };

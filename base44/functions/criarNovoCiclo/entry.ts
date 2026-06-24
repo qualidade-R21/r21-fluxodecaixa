@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < 6; i++) {
       const inicio = addDays(start, i * 7);
       const fim = addDays(inicio, 6);
-      const rotulo = `${format(inicio, 'dd/MM')} - ${format(fim, 'dd/MM')}`;
+      const rotulo = `Semana ${i + 1}`;
       const semana = await base44.entities.Semana.create({
         ciclo_id: novoCiclo.id,
         numero: i + 1,

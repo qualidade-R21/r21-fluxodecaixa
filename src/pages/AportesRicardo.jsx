@@ -61,12 +61,10 @@ export default function AportesRicardo() {
   const socioRicardo = socios.find(s => s.nome === 'Ricardo');
   const socioRIC = socios.find(s => s.nome === 'RIC');
   
-  const gtrEmp = empreendimentos.find(e => e.nome.includes('GTR'));
-
   // Compute aportes
-  const aportesPontaDoLobo = useMemo(() => getAportes('Ponta do Lobo'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas]);
-  const aportesSolenne = useMemo(() => getAportes('Solenne'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas]);
-  const aportesGrupoGC = useMemo(() => getAportes('Green Concept'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, projetos, despesasProjetos]);
+  const aportesPontaDoLobo = useMemo(() => getAportes('Ponta do Lobo'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, socios]);
+  const aportesSolenne = useMemo(() => getAportes('Solenne'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, socios]);
+  const aportesGrupoGC = useMemo(() => getAportes('Green Concept'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, socios, projetos, despesasProjetos]);
 
   // Build rows (4 linhas conforme especificação)
   const rows = [

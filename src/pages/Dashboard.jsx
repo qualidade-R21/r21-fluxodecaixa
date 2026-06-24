@@ -123,7 +123,8 @@ export default function Dashboard() {
       await base44.functions.invoke('arquivarVersaoSemanal', {});
       queryClient.invalidateQueries({ queryKey: ['versoesSemanais'] });
     } catch (err) {
-      // error will bubble
+      alert('Erro ao arquivar versão: ' + (err?.message || 'Tente novamente.'));
+      console.error(err);
     }
   };
 

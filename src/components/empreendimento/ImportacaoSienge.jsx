@@ -38,8 +38,11 @@ async function pdfLines(arrayBuffer) {
 function parseSienge(lines, semanasDoCiclo) {
   const brnum = s => parseFloat(s.replace(/\./g, '').replace(',', '.'));
   const txt = lines.join('\n');
-  const mPeriodo = txt.match(/Per[ií]odo\s+(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
+  const mPeriodo = txt.match(/Per[ií]odo\s*:?\s*(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
   const periodoInicio = mPeriodo ? mPeriodo[1] : null;
+  const periodoInicioDate = periodoInicio
+    ? (() => { const [d,mo,y] = periodoInicio.split('/').map(Number); return new Date(y, mo-1, d); })()
+    : null;
   const tipo = /contas a pagar/i.test(txt) ? 'despesas'
              : /contas a receber/i.test(txt) ? 'receitas' : null;
 
@@ -78,6 +81,7 @@ function parseSienge(lines, semanasDoCiclo) {
   Object.keys(daily).forEach(k => {
     const [d, mo, y] = k.split('/').map(Number);
     const dt = new Date(y, mo - 1, d);
+    if (periodoInicioDate && dt < periodoInicioDate) return;
     let hit = false;
     effectiveSemanas.forEach((w, i) => {
       if (dt >= new Date(w.inicio) && dt <= new Date(w.fim)) { sem[i] += daily[k]; hit = true; }
@@ -281,7 +285,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
                       const d = extraido - atual;
                       return (
                         <tr key={s.id} className={`border-b border-[#E5E5E5] ${si % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
-                          <td className="py-2 px-3 font-medium">{si === 0 && preview.periodoInicio ? `${preview.periodoInicio.substring(0, 5)} - ${getSemanaLabel(s.id).split(' - ')[1]}` : getSemanaLabel(s.id)}</td>
+                          <td className="py-2 px-3 font-medium">{si === 0 && preview.periodoInicio ? (() => { const p = getSemanaLabel(s.id).split(' - '); return `${preview.periodoInicio.substring(0, 5)} - ${p.length > 1 ? p[1] : p[0]}`; })() : getSemanaLabel(s.id)}</td>
                           <td className="text-right py-2 px-3 tabular-nums">{formatBRL(extraido)}</td>
                           <td className="text-right py-2 px-3 tabular-nums text-muted-foreground">{formatBRL(atual)}</td>
                           <td className={`text-right py-2 px-3 tabular-nums font-medium ${d !== 0 ? (d > 0 ? 'text-green-600' : 'text-primary') : 'text-muted-foreground'}`}>

@@ -106,16 +106,61 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
   const inputRef = useRef();
   const qc = useQueryClient();
 
+  const fmtDateISO = (dt) => {
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    return `${dt.getFullYear()}-${mm}-${dd}`;
+  };
+
+  const fmtRotulo = (dt) => {
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}`;
+  };
+
   const processFile = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
-    const semanasDoCiclo = semanas.map(s => ({
-      id: s.id,
-      inicio: new Date(s.data_inicio + 'T00:00:00'),
-      fim: new Date(s.data_fim + 'T23:59:59'),
-    }));
-
     const lines = await pdfLines(arrayBuffer);
-    const { tipo, nomeEmpresa, totalEmpresa, sem, fora, periodoInicio } = parseSienge(lines, semanasDoCiclo);
+
+    // Extrair início do período do PDF
+    let periodoInicio = null;
+    for (const line of lines.slice(0, 40)) {
+      const mP = line.match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
+      if (mP) { periodoInicio = mP[1]; break; }
+    }
+
+    // Calcular datas das semanas a partir do período do PDF
+    let semanasDoCiclo;
+    let newWeekDates = null;
+    if (periodoInicio) {
+      const [d, mo, y] = periodoInicio.split('/').map(Number);
+      const startDate = new Date(y, mo - 1, d);
+      semanasDoCiclo = semanas.map((s, i) => {
+        const inicio = new Date(startDate);
+        inicio.setDate(inicio.getDate() + i * 7);
+        const fim = new Date(inicio);
+        fim.setDate(fim.getDate() + 6);
+        return {
+          id: s.id,
+          inicio,
+          fim: new Date(fim.getFullYear(), fim.getMonth(), fim.getDate(), 23, 59, 59),
+        };
+      });
+      newWeekDates = semanasDoCiclo.map(w => ({
+        id: w.id,
+        data_inicio: fmtDateISO(w.inicio),
+        data_fim: fmtDateISO(w.fim),
+        rotulo: `${fmtRotulo(w.inicio)} - ${fmtRotulo(w.fim)}`,
+      }));
+    } else {
+      semanasDoCiclo = semanas.map(s => ({
+        id: s.id,
+        inicio: new Date(s.data_inicio + 'T00:00:00'),
+        fim: new Date(s.data_fim + 'T23:59:59'),
+      }));
+    }
+
+    const { tipo, nomeEmpresa, totalEmpresa, sem, fora } = parseSienge(lines, semanasDoCiclo);
 
     if (!tipo) return null;
 
@@ -131,6 +176,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       porSemana,
       fora,
       periodoInicio,
+      newWeekDates,
       fileNome: file.name,
       file
     };
@@ -211,7 +257,11 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     }
   };
 
-  const getSemanaLabel = (semanaId) => {
+  const getSemanaLabel = (semanaId, preview) => {
+    if (preview?.newWeekDates) {
+      const wd = preview.newWeekDates.find(w => w.id === semanaId);
+      if (wd) return wd.rotulo;
+    }
     const s = semanas.find(s => s.id === semanaId);
     return s ? (s.rotulo || `Sem ${s.numero}`) : semanaId;
   };
@@ -289,7 +339,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
                       const extraido = preview.porSemana[s.id] || 0;
                       const atual = getLancAtual(s.id, fieldAtual);
                       const d = extraido - atual;
-                      const semanaLabel = getSemanaLabel(s.id);
+                      const semanaLabel = getSemanaLabel(s.id, preview);
                       return (
                         <tr key={s.id} className={`border-b border-[#E5E5E5] ${si % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
                           <td className="py-2 px-3 font-medium">{semanaLabel}</td>

@@ -6,7 +6,7 @@ import { Upload, CheckCircle, X, AlertTriangle, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatBRL } from '@/lib/calculos';
 import { useQueryClient } from '@tanstack/react-query';
-import { addDays, format } from 'date-fns';
+
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
@@ -289,15 +289,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
                       const extraido = preview.porSemana[s.id] || 0;
                       const atual = getLancAtual(s.id, fieldAtual);
                       const d = extraido - atual;
-                      const semanaLabel = (() => {
-                        if (preview.periodoInicio) {
-                          const [d, mo, y] = preview.periodoInicio.split('/').map(Number);
-                          const start = addDays(new Date(y, mo - 1, d), si * 7);
-                          const end = addDays(start, 6);
-                          return `${format(start, 'dd/MM')} - ${format(end, 'dd/MM')}`;
-                        }
-                        return getSemanaLabel(s.id);
-                      })();
+                      const semanaLabel = getSemanaLabel(s.id);
                       return (
                         <tr key={s.id} className={`border-b border-[#E5E5E5] ${si % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
                           <td className="py-2 px-3 font-medium">{semanaLabel}</td>

@@ -273,7 +273,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
                     </tr>
                   </thead>
                   <tbody>
-                    {semanas.map((s, si) => {
+                    {semanas.filter(s => (preview.porSemana[s.id] || 0) > 0).map((s, si) => {
                       const extraido = preview.porSemana[s.id] || 0;
                       const atual = getLancAtual(s.id, fieldAtual);
                       const d = extraido - atual;

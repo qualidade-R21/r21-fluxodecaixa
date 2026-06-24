@@ -14,12 +14,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Nome e data de início são obrigatórios' }, { status: 400 });
     }
 
-    // Find current active cycle
+    // Find current active cycle (optional — first cycle has no previous)
     const ciclosAtivos = await base44.entities.Ciclo.filter({ status: 'ativo' });
-    if (ciclosAtivos.length === 0) {
-      return Response.json({ error: 'Nenhum ciclo ativo encontrado' }, { status: 400 });
-    }
-    const cicloAntigo = ciclosAtivos[0];
+    const cicloAntigo = ciclosAtivos.length > 0 ? ciclosAtivos[0] : null;
 
     // 1. Create new cycle as active
     const novoCiclo = await base44.entities.Ciclo.create({ nome, status: 'ativo' });
@@ -61,24 +58,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 5. Copy SaldoEmpreendimento from old cycle to new cycle (keep values)
-    const saldosAntigos = await base44.entities.SaldoEmpreendimento.filter({ ciclo_id: cicloAntigo.id });
-    const empsComSaldo = new Set(saldosAntigos.map(s => s.empreendimento_id));
-
-    for (const saldo of saldosAntigos) {
-      await base44.entities.SaldoEmpreendimento.create({
-        empreendimento_id: saldo.empreendimento_id,
-        ciclo_id: novoCiclo.id,
-        saldo_atual: saldo.saldo_atual || 0,
-        saldo_aplicado: saldo.saldo_aplicado || 0,
-        saldo_atual_r21: saldo.saldo_atual_r21 || 0,
-        saldo_decoracao: saldo.saldo_decoracao || 0,
-        inadimplencia: saldo.inadimplencia || 0,
-        observacoes: saldo.observacoes || '',
-      });
+    // 5. Copy SaldoEmpreendimento from old cycle (or create zeroed if none)
+    const empsComSaldo = new Set();
+    if (cicloAntigo) {
+      const saldosAntigos = await base44.entities.SaldoEmpreendimento.filter({ ciclo_id: cicloAntigo.id });
+      for (const saldo of saldosAntigos) {
+        empsComSaldo.add(saldo.empreendimento_id);
+        await base44.entities.SaldoEmpreendimento.create({
+          empreendimento_id: saldo.empreendimento_id,
+          ciclo_id: novoCiclo.id,
+          saldo_atual: saldo.saldo_atual || 0,
+          saldo_aplicado: saldo.saldo_aplicado || 0,
+          saldo_atual_r21: saldo.saldo_atual_r21 || 0,
+          saldo_decoracao: saldo.saldo_decoracao || 0,
+          inadimplencia: saldo.inadimplencia || 0,
+          observacoes: saldo.observacoes || '',
+        });
+      }
     }
 
-    // Create SaldoEmpreendimento for empreendimentos that didn't have one
+    // Create zeroed SaldoEmpreendimento for empreendimentos without one
     for (const emp of empreendimentos) {
       if (!empsComSaldo.has(emp.id)) {
         await base44.entities.SaldoEmpreendimento.create({
@@ -118,7 +117,9 @@ Deno.serve(async (req) => {
     }
 
     // 7. Mark old cycle as encerrado
-    await base44.entities.Ciclo.update(cicloAntigo.id, { status: 'encerrado' });
+    if (cicloAntigo) {
+      await base44.entities.Ciclo.update(cicloAntigo.id, { status: 'encerrado' });
+    }
 
     return Response.json({
       success: true,

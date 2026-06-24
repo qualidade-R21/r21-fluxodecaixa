@@ -199,6 +199,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       qc.invalidateQueries({ queryKey: ['lancamentos'] });
       qc.invalidateQueries({ queryKey: ['despesas-projetos'] });
       qc.invalidateQueries({ queryKey: ['projetos-internos'] });
+      qc.invalidateQueries({ queryKey: ['semanas'] });
       setSuccess(`${previews.length} relatório(s) importado(s)`);
       setPreviews([]);
       if (onImported) onImported();

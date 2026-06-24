@@ -39,11 +39,24 @@ function parseSienge(lines, semanasDoCiclo) {
   const brnum = s => parseFloat(s.replace(/\./g, '').replace(',', '.'));
   const txt = lines.join('\n');
 
-  // CORRIGIDO: aceita "Período:" com dois-pontos (formato do Sienge)
-  const mPeriodo = txt.match(/Per[ií]odo\s*:?\s*(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
-  const periodoInicio = mPeriodo ? mPeriodo[1] : null;
+  // Extrai periodoInicio: tenta na mesma linha E na linha seguinte
+  // (PDFs com tabelas podem separar "Período" e a data em linhas distintas)
+  let periodoInicio = null;
+  for (let i = 0; i < lines.length; i++) {
+    if (/Per[ií]odo/i.test(lines[i])) {
+      // Tenta encontrar a data na mesma linha
+      const mSame = lines[i].match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
+      if (mSame) { periodoInicio = mSame[1]; break; }
+      // Tenta na linha seguinte (célula separada no PDF)
+      if (i + 1 < lines.length) {
+        const mNext = lines[i + 1].match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
+        if (mNext) { periodoInicio = mNext[1]; break; }
+      }
+      break;
+    }
+  }
 
-  // CORRIGIDO: converte periodoInicio em Date para filtrar lançamentos anteriores ao período
+  // Converte periodoInicio em Date para filtrar lançamentos anteriores ao período
   const periodoInicioDate = periodoInicio
     ? (() => { const [d, mo, y] = periodoInicio.split('/').map(Number); return new Date(y, mo - 1, d); })()
     : null;
@@ -87,7 +100,7 @@ function parseSienge(lines, semanasDoCiclo) {
     const [d, mo, y] = k.split('/').map(Number);
     const dt = new Date(y, mo - 1, d);
 
-    // CORRIGIDO: ignora datas anteriores ao período do relatório
+    // Ignora datas anteriores ao início do período do relatório
     if (periodoInicioDate && dt < periodoInicioDate) return;
 
     let hit = false;
@@ -290,7 +303,6 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
                       const extraido = preview.porSemana[s.id] || 0;
                       const atual = getLancAtual(s.id, fieldAtual);
                       const d = extraido - atual;
-                      // CORRIGIDO: label seguro mesmo quando rotulo não tem " - "
                       const semanaLabel = (() => {
                         if (si === 0 && preview.periodoInicio) {
                           const p = getSemanaLabel(s.id).split(' - ');

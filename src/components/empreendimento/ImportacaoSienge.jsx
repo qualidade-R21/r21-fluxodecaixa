@@ -39,28 +39,14 @@ function parseSienge(lines, semanasDoCiclo) {
   const brnum = s => parseFloat(s.replace(/\./g, '').replace(',', '.'));
   const txt = lines.join('\n');
 
-  // Extrai periodoInicio: tenta na mesma linha E na linha seguinte
-  // (PDFs com tabelas podem separar "Período" e a data em linhas distintas)
   let periodoInicio = null;
-  for (let i = 0; i < lines.length; i++) {
-    if (/Per[ií]odo/i.test(lines[i])) {
-      // Tenta encontrar a data na mesma linha
-      const mSame = lines[i].match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
-      if (mSame) { periodoInicio = mSame[1]; break; }
-      // Tenta na linha seguinte (célula separada no PDF)
-      if (i + 1 < lines.length) {
-        const mNext = lines[i + 1].match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
-        if (mNext) { periodoInicio = mNext[1]; break; }
-      }
-      break;
-    }
+  for (const line of lines.slice(0, 40)) {
+    const mP = line.match(/(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/);
+    if (mP) { periodoInicio = mP[1]; break; }
   }
-
-  // Converte periodoInicio em Date para filtrar lançamentos anteriores ao período
   const periodoInicioDate = periodoInicio
     ? (() => { const [d, mo, y] = periodoInicio.split('/').map(Number); return new Date(y, mo - 1, d); })()
     : null;
-
   const tipo = /contas a pagar/i.test(txt) ? 'despesas'
              : /contas a receber/i.test(txt) ? 'receitas' : null;
 
@@ -99,10 +85,7 @@ function parseSienge(lines, semanasDoCiclo) {
   Object.keys(daily).forEach(k => {
     const [d, mo, y] = k.split('/').map(Number);
     const dt = new Date(y, mo - 1, d);
-
-    // Ignora datas anteriores ao início do período do relatório
     if (periodoInicioDate && dt < periodoInicioDate) return;
-
     let hit = false;
     effectiveSemanas.forEach((w, i) => {
       if (dt >= new Date(w.inicio) && dt <= new Date(w.fim)) { sem[i] += daily[k]; hit = true; }

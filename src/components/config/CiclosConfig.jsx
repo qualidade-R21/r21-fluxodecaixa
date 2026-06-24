@@ -32,7 +32,11 @@ export default function CiclosConfig() {
   };
 
   const handleDelete = async (id) => {
-    await base44.entities.Ciclo.delete(id);
+    try {
+      await base44.entities.Ciclo.delete(id);
+    } catch (e) {
+      if (!/not found/i.test(e?.message || '')) throw e;
+    }
     qc.invalidateQueries({ queryKey: ['ciclos'] });
   };
 

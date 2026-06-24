@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
-import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
+import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar } from '@/lib/calculos';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 export default function AportesRicardo() {
   const { data: empreendimentos } = useEmpreendimentos();
@@ -22,14 +21,13 @@ export default function AportesRicardo() {
     [...semanas].sort((a, b) => a.numero - b.numero), [semanas]
   );
 
-  // Helper to compute aportes for an empreendimento
   const getAportes = (empNome) => {
     const emp = empreendimentos.find(e => e.nome.includes(empNome));
     if (!emp) return {};
     const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
     const saldoEmp = saldos.find(s => s.empreendimento_id === emp.id);
     const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
-    
+
     let despPorSemana = {};
     let projs = [];
     if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
@@ -56,17 +54,15 @@ export default function AportesRicardo() {
     return calcAportesPorSemana(empLancs, emp, saldoEmp, semanasOrdenadas, eqF, despPorSemana, projs, acumulados);
   };
 
-  // Find relevant socio IDs
   const socioGTR = socios.find(s => s.nome === 'GTR');
   const socioRicardo = socios.find(s => s.nome === 'Ricardo');
   const socioRIC = socios.find(s => s.nome === 'RIC');
-  
-  // Compute aportes
+
+  // CORRIGIDO: socios adicionado nas dependências dos três useMemo
   const aportesPontaDoLobo = useMemo(() => getAportes('Ponta do Lobo'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, socios]);
   const aportesSolenne = useMemo(() => getAportes('Solenne'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, socios]);
   const aportesGrupoGC = useMemo(() => getAportes('Green Concept'), [empreendimentos, lancamentos, saldos, participacoes, semanasOrdenadas, socios, projetos, despesasProjetos]);
 
-  // Build rows (4 linhas conforme especificação)
   const rows = [
     {
       label: 'Lisboa (GTR na Solenne)',
@@ -133,7 +129,6 @@ export default function AportesRicardo() {
                   </tr>
                 );
               })}
-              {/* TOTAL row */}
               <tr className="bg-[#F0F0F0] border-t-2 border-foreground">
                 <td className="py-3 px-3 font-semibold">TOTAL</td>
                 {semanasOrdenadas.map(s => {

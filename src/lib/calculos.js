@@ -22,13 +22,15 @@ function getTipoDespesa(emp) {
 }
 
 // Retorna o total de despesas da semana conforme o tipo de entidade
-function getDespesas(lanc, tipo, despProjetos) {
+function getDespesas(lanc, tipo, despProjetos, empreendimento) {
   switch (tipo) {
     case 'gc':
       return despProjetos;
     case 'gtr':
-      // despesa_GTR = consolidada + afac (afac pode ser negativo)
-      return (lanc.despesa_consolidada || 0) + (lanc.despesa_afac || 0);
+      if (empreendimento?.despesa_dividida_r21) {
+        return (lanc.despesa_consolidada || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0);
+      }
+      return (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0);
     case 'ric':
       // despesa_RIC = consolidada + prevista + r21 + afac
       return (lanc.despesa_consolidada || 0) + (lanc.despesa_prevista || 0) + (lanc.despesa_r21 || 0) + (lanc.despesa_afac || 0);
@@ -42,7 +44,7 @@ function getDespesas(lanc, tipo, despProjetos) {
 
 export function calcSaldoSemana(lancamento, empreendimento, despesasProjetos = 0) {
   const tipo = getTipoDespesa(empreendimento);
-  const despesas = getDespesas(lancamento, tipo, despesasProjetos);
+  const despesas = getDespesas(lancamento, tipo, despesasProjetos, empreendimento);
 
   if (tipo === 'gc') {
     return -despesas; // GC não tem receitas
@@ -90,7 +92,7 @@ export function calcContasAPagar(lancamentos, semanasOrdenadas, emp, despesasPro
     const semana = semanasOrdenadas[i];
     const lanc = lancamentos.find(l => l.semana_id === semana.id) || {};
     const despProjetos = despesasProjetosPorSemana[semana.id] || 0;
-    total += getDespesas(lanc, tipo, despProjetos);
+    total += getDespesas(lanc, tipo, despProjetos, emp);
   }
   return total;
 }

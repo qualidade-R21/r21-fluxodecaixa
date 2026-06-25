@@ -100,20 +100,24 @@ export default function TabelaMultiProjetos({ emp, semanas, projetos, despesasPr
               </tr>
             ))}
           </tbody>
-        </table>
-
-        {/* Disponível por projeto */}
-        <div className="mt-6 pt-4 border-t border-border">
-          <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-3">Saldo Disponível por Projeto</p>
-          <div className="flex flex-wrap gap-3">
-            {projetos.map(p => (
-              <div key={p.id} className="bg-muted rounded-lg px-4 py-3">
-                <p className="text-[13px] text-muted-foreground">{p.nome}</p>
-                <p className="text-[20px] font-medium font-heading tabular-nums mt-0.5">{formatBRL(p.saldo_disponivel || 0)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+          <tfoot>
+            <tr className="border-t-2 border-border bg-[#F5F5F5]" style={{ height: '44px' }}>
+              <td className="py-2 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] font-medium">Total</td>
+              {projetos.map(p => {
+                const somaProjetos = semanas.reduce((sum, s) => sum + getDespesa(p.id, s.id), 0);
+                return (
+                  <td key={p.id} className="text-right py-2 px-3 text-[15px] font-medium tabular-nums">
+                    {formatBRL(somaProjetos)}
+                  </td>
+                );
+              })}
+              <td className="text-right py-2 px-3 text-[15px] font-semibold tabular-nums bg-[#F0F0F0]">
+                {formatBRL(semanas.reduce((sum, s) => sum + getSomaSemana(s.id), 0))}
+              </td>
+              <td className="text-right py-2 px-3 bg-[#F0F0F0]"></td>
+            </tr>
+          </tfoot>
+          </table>
       </CardContent>
     </Card>
   );

@@ -94,7 +94,7 @@ export default function TabelaMultiProjetos({ emp, semanas, projetos, despesasPr
                   </td>
                 ))}
                 <td className="text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5]">{formatBRL(getSomaSemana(s.id))}</td>
-                <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5] ${(acumulados[s.id] || 0) < 0 ? 'text-primary' : ''}`}>
+                <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums ${(acumulados[s.id] || 0) < 0 ? 'bg-red-100 text-primary' : 'bg-green-100'}`}>
                   {formatBRL(acumulados[s.id] || 0)}
                 </td>
               </tr>

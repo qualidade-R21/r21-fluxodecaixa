@@ -146,7 +146,7 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
                   <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5] ${saldoSemana < 0 ? 'text-primary' : ''}`}>
                     {formatBRL(saldoSemana)}
                   </td>
-                  <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums bg-[#F5F5F5] ${saldoAcum < 0 ? 'text-primary' : ''}`}>
+                  <td className={`text-right py-2 px-3 text-[15px] font-medium tabular-nums ${saldoAcum < 0 ? 'bg-red-100 text-primary' : 'bg-green-100'}`}>
                     {formatBRL(saldoAcum)}
                   </td>
                 </tr>

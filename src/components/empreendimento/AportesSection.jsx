@@ -1,12 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { base44 } from '@/api/base44Client';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcContasAPagar } from '@/lib/calculos';
 
+function MoneyCell({ value, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const [raw, setRaw] = useState('');
+
+  const handleFocus = () => {
+    setEditing(true);
+    setRaw(value ? String(value) : '');
+  };
+
+  const handleBlur = () => {
+    setEditing(false);
+    const num = parseFloat(raw.replace(/\./g, '').replace(',', '.')) || 0;
+    if (num !== (value || 0)) onChange(num);
+  };
+
+  return editing ? (
+    <Input
+      type="text"
+      value={raw}
+      onChange={e => setRaw(e.target.value)}
+      onBlur={handleBlur}
+      autoFocus
+      className="h-8 text-[15px] w-28 text-right"
+    />
+  ) : (
+    <span
+      onClick={handleFocus}
+      className="cursor-pointer hover:bg-muted px-1.5 py-0.5 rounded text-[15px] tabular-nums"
+    >
+      {formatBRL(value || 0)}
+    </span>
+  );
+}
+
 export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, participacoes, socios, despesasPorSemana, projetosInternos, acumulados }) {
+  const qc = useQueryClient();
   if (emp.tipo_fluxo !== 'com_aportes' && emp.tipo_fluxo !== 'multi_projetos') return null;
 
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
+
+  const handleParticipacaoChange = async (participacaoId, field, valor) => {
+    await base44.entities.Participacao.update(participacaoId, { [field]: valor });
+    qc.invalidateQueries({ queryKey: ['participacoes'] });
+  };
   if (empParts.length === 0) return null;
 
   const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
@@ -51,8 +94,12 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                 <tr key={e.socio_id} className={`border-b border-[#E5E5E5] ${ei % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
                   <td className="py-2 px-3 font-medium">{getSocioNome(e.socio_id)}</td>
                   <td className="text-right py-2 px-3 tabular-nums">{e.percentual_sociedade?.toFixed(2)}%</td>
-                  <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.valor_aportado)}</td>
-                  <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.valor_devolvido)}</td>
+                  <td className="text-right py-2 px-3 tabular-nums">
+                    <MoneyCell value={e.valor_aportado} onChange={(v) => handleParticipacaoChange(e.id, 'valor_aportado', v)} />
+                  </td>
+                  <td className="text-right py-2 px-3 tabular-nums">
+                    <MoneyCell value={e.valor_devolvido} onChange={(v) => handleParticipacaoChange(e.id, 'valor_devolvido', v)} />
+                  </td>
                   <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.saldoADevolver)}</td>
                   <td className="text-right py-2 px-3 tabular-nums">{(e.percentualAtual * 100).toFixed(2)}%</td>
                   <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.totalParaEqualizar)}</td>

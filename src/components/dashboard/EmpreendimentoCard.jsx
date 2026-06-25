@@ -37,7 +37,7 @@ export default function EmpreendimentoCard({ emp, saldoAtual, saldoAcumuladoFina
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Saldo Aplicado</p>
+              <p className="text-[12px] uppercase tracking-wider text-[#4A4A4A] font-medium mb-2">Saldo Acumulado</p>
               <p className={`text-[18px] font-semibold font-heading tabular-nums leading-tight break-all ${saldoAcumuladoFinal < 0 ? 'text-primary' : ''}`}>
                 {formatBRL(saldoAcumuladoFinal)}
               </p>

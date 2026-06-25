@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { addDays, format, parseISO } from 'npm:date-fns@3.6.0';
 
 Deno.serve(async (req) => {
   try {
@@ -9,9 +8,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { nome, data_inicio } = await req.json();
-    if (!nome || !data_inicio) {
-      return Response.json({ error: 'Nome e data de início são obrigatórios' }, { status: 400 });
+    const { nome } = await req.json();
+    if (!nome) {
+      return Response.json({ error: 'Nome do ciclo é obrigatório' }, { status: 400 });
     }
 
     // Find current active cycle (optional — first cycle has no previous)
@@ -21,19 +20,12 @@ Deno.serve(async (req) => {
     // 1. Create new cycle as active
     const novoCiclo = await base44.entities.Ciclo.create({ nome, status: 'ativo' });
 
-    // 2. Create 6 semanas
-    const start = parseISO(data_inicio);
+    // 2. Create 6 semanas (sem datas — preenchidas ao importar o primeiro relatório)
     const semanaIds = [];
     for (let i = 0; i < 6; i++) {
-      const inicio = addDays(start, i * 7);
-      const fim = addDays(inicio, 6);
-      const rotulo = `Semana ${i + 1}`;
       const semana = await base44.entities.Semana.create({
         ciclo_id: novoCiclo.id,
         numero: i + 1,
-        data_inicio: format(inicio, 'yyyy-MM-dd'),
-        data_fim: format(fim, 'yyyy-MM-dd'),
-        rotulo
       });
       semanaIds.push(semana.id);
     }

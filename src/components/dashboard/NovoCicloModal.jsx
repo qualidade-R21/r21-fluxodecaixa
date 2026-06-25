@@ -6,14 +6,12 @@ import { Label } from '@/components/ui/label';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, CheckCircle2, Archive } from 'lucide-react';
-import { addDays, format, parseISO } from 'date-fns';
 
-export default function NovoCicloModal({ open, onOpenChange, cicloAtivo, dataInicioAtual }) {
+export default function NovoCicloModal({ open, onOpenChange, cicloAtivo }) {
   const [step, setStep] = useState(1);
   const [archiving, setArchiving] = useState(false);
   const [archived, setArchived] = useState(false);
   const [nome, setNome] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
   const [creating, setCreating] = useState(false);
   const qc = useQueryClient();
 
@@ -22,7 +20,6 @@ export default function NovoCicloModal({ open, onOpenChange, cicloAtivo, dataIni
     setArchiving(false);
     setArchived(false);
     setNome('');
-    setDataInicio('');
     setCreating(false);
   };
 
@@ -40,29 +37,13 @@ export default function NovoCicloModal({ open, onOpenChange, cicloAtivo, dataIni
 
   const handleCreate = async () => {
     setCreating(true);
-    await base44.functions.invoke('criarNovoCiclo', { nome, data_inicio: dataInicio });
+    await base44.functions.invoke('criarNovoCiclo', { nome });
     qc.invalidateQueries();
     reset();
     onOpenChange(false);
   };
 
-  // Auto-suggest next cycle name and start date
   const handleOpen = (isOpen) => {
-    if (isOpen && dataInicioAtual) {
-      // Try to suggest next cycle
-      const ultimaSemanaStart = parseISO(dataInicioAtual);
-      const proxInicio = addDays(ultimaSemanaStart, 42); // 6 semanas × 7 dias
-      setDataInicio(format(proxInicio, 'yyyy-MM-dd'));
-
-      const mes1 = format(proxInicio, 'MMMM', { locale: undefined });
-      const mes2 = format(addDays(proxInicio, 41), 'MMMM', { locale: undefined });
-      const meses = {
-        January: 'Janeiro', February: 'Fevereiro', March: 'Março', April: 'Abril',
-        May: 'Maio', June: 'Junho', July: 'Julho', August: 'Agosto',
-        September: 'Setembro', October: 'Outubro', November: 'Novembro', December: 'Dezembro'
-      };
-      setNome(`${meses[format(proxInicio, 'MMMM')] || format(proxInicio, 'MMMM')}–${meses[format(addDays(proxInicio, 41), 'MMMM')] || format(addDays(proxInicio, 41), 'MMMM')} ${format(proxInicio, 'yyyy')}`);
-    }
     if (!isOpen) {
       reset();
     }
@@ -124,28 +105,16 @@ export default function NovoCicloModal({ open, onOpenChange, cicloAtivo, dataIni
                   placeholder="Julho–Agosto 2026"
                   className="mt-1.5"
                 />
-              </div>
-              <div>
-                <Label className="text-[13px]">Data de início da Semana 1</Label>
-                <Input
-                  type="date"
-                  value={dataInicio}
-                  onChange={e => setDataInicio(e.target.value)}
-                  className="mt-1.5"
-                />
-                {dataInicio && (
-                  <p className="text-[12px] text-muted-foreground mt-1.5">
-                    6 semanas: {format(parseISO(dataInicio), 'dd/MM')} até{' '}
-                    {format(addDays(parseISO(dataInicio), 41), 'dd/MM/yyyy')}
-                  </p>
-                )}
+                <p className="text-[12px] text-muted-foreground mt-2">
+                  As datas das semanas serão definidas automaticamente ao importar o primeiro relatório.
+                </p>
               </div>
             </div>
             <DialogFooter className="gap-2 mt-6">
               <Button variant="outline" onClick={() => setStep(1)}>Voltar</Button>
               <Button
                 onClick={handleCreate}
-                disabled={!nome || !dataInicio || creating}
+                disabled={!nome || creating}
                 className="gap-2 bg-[#AD0000] hover:bg-[#8B0000] text-white"
               >
                 {creating ? (

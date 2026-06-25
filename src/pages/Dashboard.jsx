@@ -172,9 +172,13 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2 mt-1.5">
             <Badge variant="outline" className="font-heading text-[13px]">{cicloAtivo.nome}</Badge>
-            <span className="text-[13px] text-muted-foreground">
-              {semanasOrdenadas.length > 0 && `${semanasOrdenadas[0].rotulo} → ${semanasOrdenadas[semanasOrdenadas.length-1]?.rotulo}`}
-            </span>
+            {semanasOrdenadas.length > 0 && semanasOrdenadas[0].data_inicio ? (
+              <span className="text-[13px] text-muted-foreground">
+                {semanasOrdenadas[0].rotulo} → {semanasOrdenadas[semanasOrdenadas.length-1]?.rotulo}
+              </span>
+            ) : (
+              <span className="text-[13px] text-muted-foreground italic">Aguardando importação de relatório</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -222,7 +226,6 @@ export default function Dashboard() {
         open={novoCicloOpen}
         onOpenChange={setNovoCicloOpen}
         cicloAtivo={cicloAtivo}
-        dataInicioAtual={semanasOrdenadas[0]?.data_inicio}
       />
     </div>
   );

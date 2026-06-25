@@ -168,6 +168,15 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
     semanas.forEach((s, i) => { porSemana[s.id] = sem[i] || 0; });
     const totalExtraido = sem.reduce((a, b) => a + b, 0) + fora;
 
+    // Determinar campo de destino: RIC com despesa_dividida_r21 pode ter relatório R21
+    let campoDestino = tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
+    if (emp.despesa_dividida_r21 && tipo === 'despesas') {
+      const buscaR21 = (nomeEmpresa || '') + ' ' + file.name;
+      if (/r21/i.test(buscaR21)) {
+        campoDestino = 'despesa_r21';
+      }
+    }
+
     return {
       tipo,
       nomeEmpresa,
@@ -178,6 +187,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
       periodoInicio,
       newWeekDates,
       fileNome: file.name,
+      campoDestino,
       file
     };
   };
@@ -290,7 +300,7 @@ export default function ImportacaoSienge({ emp, semanas, lancamentos, cicloId, o
           </div>
         )}
         {previews.map((preview, idx) => {
-          const fieldAtual = preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
+          const fieldAtual = preview.campoDestino || (preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada');
           const totalAtual = semanas.reduce((sum, s) => sum + getLancAtual(s.id, fieldAtual), 0);
           const diff = preview.totalExtraido - totalAtual;
           const diffTotal = preview.totalEmpresa ? Math.abs(preview.totalExtraido - preview.totalEmpresa) : null;

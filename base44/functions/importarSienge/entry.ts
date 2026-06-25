@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < previews.length; i++) {
       const preview = previews[i];
-      const field = preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada';
+      const field = preview.campoDestino || (preview.tipo === 'despesas' ? 'despesa_consolidada' : 'receita_consolidada');
 
       // Determinar se mapeia para um projeto filho (multi_projetos + nomeEmpresa bate)
       let projetoMatch = null;

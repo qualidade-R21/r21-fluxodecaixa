@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Link2 } from 'lucide-react';
+
 import { formatBRL, calcSaldoSemana } from '@/lib/calculos';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 function MoneyInput({ value, onChange, disabled, isCalc }) {
   const [editing, setEditing] = useState(false);
@@ -80,7 +80,7 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
     columns.push({ key: 'despesa_consolidada', label: 'Despesa Cons.', editable: true });
     columns.push({ key: 'despesa_prevista', label: 'Despesa Prev. (AFAC)', editable: true });
     if (emp.tipo_fluxo === 'com_aportes' || emp.tem_previsao_afac) {
-      columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true, isCalc: true });
+      columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: true });
     }
   }
 
@@ -121,19 +121,7 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
                   </td>
                   {columns.map(col => (
                     <td key={col.key} className={`text-right py-2 px-3 ${col.isCalc ? 'bg-[#F5F5F5]' : ''}`}>
-                      <div className="flex items-center justify-end gap-1.5">
-                        {col.isAfac && lanc[col.key] > 0 && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-[13px]">Vem dos aportes automáticos</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
+                      <div className="flex items-center justify-end">
                         <MoneyInput
                           value={lanc[col.key]}
                           onChange={(v) => handleChange(s.id, col.key, v)}

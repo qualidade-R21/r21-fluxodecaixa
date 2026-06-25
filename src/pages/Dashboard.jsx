@@ -10,7 +10,7 @@ import { Archive, Calendar, FileDown, PlusCircle } from 'lucide-react';
 import NovoCicloModal from '@/components/dashboard/NovoCicloModal';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAfacSync } from '@/lib/useAfacSync';
+
 import { gerarPDFGeral } from '@/lib/gerarPDF';
 import { useSocios, useParticipacoes } from '@/lib/useFluxoData';
 
@@ -38,18 +38,6 @@ export default function Dashboard() {
   const empAtivos = useMemo(() => 
     empreendimentos.filter(e => e.ativo !== false), [empreendimentos]
   );
-
-  // Sincroniza despesa_afac do RIC e GTR automaticamente
-  useAfacSync({
-    empreendimentos: empAtivos,
-    lancamentos,
-    saldos,
-    semanas: semanasOrdenadas,
-    socios,
-    participacoes,
-    projetos: allProjetos,
-    despesasProjetos,
-  });
 
   // Pre-compute data per empreendimento
   const empData = useMemo(() => {

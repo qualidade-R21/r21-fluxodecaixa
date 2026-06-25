@@ -73,7 +73,7 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
   if (emp.despesa_dividida_r21) {
     columns.push({ key: 'despesa_consolidada', label: `Despesa ${emp.nome}`, editable: true });
     columns.push({ key: 'despesa_r21', label: 'Despesa R21', editable: true });
-    columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: false, isAfac: true, isCalc: true });
+    columns.push({ key: 'despesa_afac', label: 'Previsão (Afac)', editable: true });
   } else if (emp.tipo_fluxo === 'multi_projetos') {
     return null;
   } else {

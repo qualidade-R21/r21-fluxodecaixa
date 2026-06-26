@@ -187,24 +187,19 @@ export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, sema
 
     const despesasSemana = getDespesasAporte(lanc, empreendimento, despProjetos);
 
-    let aporteSemana = 0;
+    let aporteSemana;
     if (i === 0) {
       let saldoAtual = saldoEmp?.saldo_atual || 0;
       if (empreendimento.tipo_fluxo === 'multi_projetos' && projetosInternos.length > 0) {
         saldoAtual = projetosInternos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
       }
-      if (despesasSemana > saldoAtual) {
-        aporteSemana = despesasSemana - saldoAtual + (empreendimento.margem_seguranca_semana1 || 0);
-      }
+      aporteSemana = despesasSemana - saldoAtual + (empreendimento.margem_seguranca_semana1 || 0);
     } else {
       const semanaAnterior = semanasOrdenadas[i - 1];
       const saldoAcumAnterior = saldosAcumulados[semanaAnterior.id] || 0;
-      if (despesasSemana > saldoAcumAnterior) {
-        aporteSemana = despesasSemana - saldoAcumAnterior + (empreendimento.margem_seguranca_demais || 0) - somaAportesAnteriores;
-      }
+      aporteSemana = despesasSemana - saldoAcumAnterior + (empreendimento.margem_seguranca_demais || 0) - somaAportesAnteriores;
     }
 
-    aporteSemana = Math.max(0, aporteSemana);
     somaAportesAnteriores += aporteSemana;
 
     // rateio por sócio usando fatorRateio

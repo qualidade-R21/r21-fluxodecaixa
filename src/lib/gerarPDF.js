@@ -404,8 +404,8 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
 
 
     y = drawSectionTitle(doc, y, 'Resumo Valores Aportados (Equalização)');
-    const eqHeads = ['Sócio', '% Soc.', 'Aportado', 'Devolvido', 'Saldo Dev.', '% Atual', 'Total Eq.', 'Aporte Nec.', 'Fator'];
-    const eqW = [28, 13, 28, 26, 26, 14, 28, 28, 14];
+    const eqHeads = ['Sócio', '% Soc.', 'Aportado', 'Devolvido', 'Saldo Dev.', '% Atual', 'Total Eq.', 'Aporte Nec.'];
+    const eqW = [28, 13, 28, 26, 26, 14, 28, 28];
     // ajusta para CW exato
     const eqSum = eqW.reduce((a, b) => a + b, 0);
     const eqScale = CW / eqSum;
@@ -420,7 +420,6 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
       `${((e.percentualAtual || 0) * 100).toFixed(1)}%`,
       e.totalParaEqualizar || 0,
       e.aporteNecessario,
-      `${((e.fatorRateio || 0) * 100).toFixed(1)}%`,
     ]);
     y = drawTable(doc, y, eqHeads, eqRows, eqWscaled);
 

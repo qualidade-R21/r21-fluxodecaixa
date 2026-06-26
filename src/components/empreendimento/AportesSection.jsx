@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcContasAPagar } from '@/lib/calculos';
@@ -46,6 +47,7 @@ function MoneyCell({ value, onChange, suffix }) {
 
 export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, participacoes, socios, despesasPorSemana, projetosInternos, acumulados }) {
   const qc = useQueryClient();
+  const [showFator, setShowFator] = useState(true);
   if (emp.tipo_fluxo !== 'com_aportes' && emp.tipo_fluxo !== 'multi_projetos') return null;
 
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
@@ -75,8 +77,12 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
     <div className="space-y-6">
       {/* Resumo Valores Aportados */}
       <Card>
-        <CardHeader className="pb-3 px-6 pt-6">
+        <CardHeader className="pb-3 px-6 pt-6 flex items-center justify-between">
           <CardTitle className="text-[20px] font-heading font-medium">Resumo Valores Aportados (Equalização)</CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] text-muted-foreground">Mostrar Fator</span>
+            <Switch checked={showFator} onCheckedChange={setShowFator} />
+          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto px-6 pb-6">
           <table className="w-full text-[15px] min-w-[700px]">
@@ -90,7 +96,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">% Atual</th>
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Total p/ Eq.</th>
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Aporte Nec.</th>
-                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Fator</th>
+                {showFator && <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Fator</th>}
               </tr>
             </thead>
             <tbody>
@@ -110,7 +116,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                   <td className="text-right py-2 px-3 tabular-nums">{(e.percentualAtual * 100).toFixed(2)}%</td>
                   <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.totalParaEqualizar)}</td>
                   <td className={`text-right py-2 px-3 tabular-nums font-medium bg-[#F5F5F5] ${e.aporteNecessario < 0 ? 'text-primary' : ''}`}>{formatBRL(e.aporteNecessario)}</td>
-                  <td className="text-right py-2 px-3 tabular-nums">{(e.fatorRateio * 100).toFixed(2)}%</td>
+                  {showFator && <td className="text-right py-2 px-3 tabular-nums">{(e.fatorRateio * 100).toFixed(2)}%</td>}
                 </tr>
               ))}
             </tbody>

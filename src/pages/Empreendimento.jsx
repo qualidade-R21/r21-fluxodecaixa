@@ -53,7 +53,7 @@ export default function Empreendimento() {
     let gcSaldoAtual = gcSaldo?.saldo_atual || 0;
     if (gcProjetos.length > 0) gcSaldoAtual = gcProjetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
     const gcContasAPagar = calcContasAPagar(gcLancs, semanasOrdenadas, gcEmp, gcDespPorSemana, 4);
-    const gcAporteTotal = gcContasAPagar > gcSaldoAtual ? gcContasAPagar - gcSaldoAtual + (gcEmp.margem_aporte_total || 0) : 0;
+    const gcAporteTotal = calcAporteTotalNecessario(gcContasAPagar, gcSaldoAtual, gcEmp.margem_aporte_total || 0);
     const gcEqualizacao = calcEqualizacao(gcParts, gcAporteTotal, gcEmp, socios);
     const gcEqComFator = calcFatorRateio(gcEqualizacao, gcAporteTotal);
     const gcAportesSemana = calcAportesPorSemana(gcLancs, gcEmp, gcSaldo, semanasOrdenadas, gcEqComFator, gcDespPorSemana, gcProjetos, gcAcumulados);

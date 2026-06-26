@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
-import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcContasAPagar } from '@/lib/calculos';
+import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 
 function MoneyCell({ value, onChange, suffix }) {
   const [editing, setEditing] = useState(false);
@@ -66,7 +66,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
     saldoAtual = projetosInternos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
   }
 
-  const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
+  const aporteTotal = calcAporteTotalNecessario(contasAPagar, saldoAtual, emp.margem_aporte_total || 0);
   const equalizacao = calcEqualizacao(empParts, aporteTotal, emp, socios);
   const eqComFator = calcFatorRateio(equalizacao, aporteTotal);
   const aportesSemana = calcAportesPorSemana(lancamentos, emp, saldoEmp, semanas, eqComFator, despesasPorSemana, projetosInternos, acumulados);

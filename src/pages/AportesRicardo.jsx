@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
-import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar } from '@/lib/calculos';
+import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function AportesRicardo() {
@@ -47,7 +47,7 @@ export default function AportesRicardo() {
       saldoAtual = projs.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
     }
 
-    const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
+    const aporteTotal = calcAporteTotalNecessario(contasAPagar, saldoAtual, emp.margem_aporte_total || 0);
     const eq = calcEqualizacao(empParts, aporteTotal, emp, socios);
     const eqF = calcFatorRateio(eq, aporteTotal);
     const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projs);

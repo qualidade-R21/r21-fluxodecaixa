@@ -187,11 +187,14 @@ export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, sema
       if (empreendimento.tipo_fluxo === 'multi_projetos' && projetosInternos.length > 0) {
         saldoAtual = projetosInternos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
       }
-      aporteSemana = despesasSemana - saldoAtual + (empreendimento.margem_seguranca_semana1 || 0);
+      // Excel: SE(despesas > saldo; despesas - saldo + margem; 0)
+      aporteSemana = despesasSemana > saldoAtual
+        ? Math.max(0, despesasSemana - saldoAtual + (empreendimento.margem_seguranca_semana1 || 0))
+        : 0;
     } else {
       const semanaAnterior = semanasOrdenadas[i - 1];
       const saldoAcumAnterior = saldosAcumulados[semanaAnterior.id] || 0;
-      aporteSemana = despesasSemana - saldoAcumAnterior + (empreendimento.margem_seguranca_demais || 0) - somaAportesAnteriores;
+      aporteSemana = Math.max(0, despesasSemana - saldoAcumAnterior + (empreendimento.margem_seguranca_demais || 0) - somaAportesAnteriores);
     }
 
     somaAportesAnteriores += aporteSemana;

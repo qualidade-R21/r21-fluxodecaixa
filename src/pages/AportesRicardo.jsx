@@ -49,7 +49,7 @@ export default function AportesRicardo() {
 
     const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
     const eq = calcEqualizacao(empParts, aporteTotal, emp, socios);
-    const eqF = calcFatorRateio(eq);
+    const eqF = calcFatorRateio(eq, aporteTotal);
     const acumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanasOrdenadas, despPorSemana, projs);
     return calcAportesPorSemana(empLancs, emp, saldoEmp, semanasOrdenadas, eqF, despPorSemana, projs, acumulados);
   };

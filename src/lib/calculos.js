@@ -108,7 +108,7 @@ export function calcAporteTotalNecessario(contasAPagar, saldoAtual, margemAporte
 
 export function calcEqualizacao(participacoes, aporteTotalNecessario, emp, socios = []) {
   const nomeEmp = (emp?.nome || '').toLowerCase();
-  const isSolenne = nomeEmp.includes('solenne');
+  const isSolenne = nomeEmp.includes('solene');
   const isPDL = nomeEmp.includes('ponta do lobo');
   const isGC = emp?.tipo_fluxo === 'multi_projetos';
 
@@ -150,15 +150,12 @@ export function calcEqualizacao(participacoes, aporteTotalNecessario, emp, socio
   });
 }
 
-// ── F) Fator de rateio: fator(s) = aporte_necessario(s) ÷ Σ aporte_necessario ──
+// ── F) Fator de rateio: fator(s) = aporte_necessario(s) ÷ aporte_total_necessario ──
 
-export function calcFatorRateio(equalizacao) {
-  // Clampa negativos a 0 para rateio (não faz sentido fator negativo)
-  const aportesPositivos = equalizacao.map(e => Math.max(0, e.aporteNecessario || 0));
-  const somaAportes = aportesPositivos.reduce((sum, v) => sum + v, 0);
-  return equalizacao.map((e, i) => ({
+export function calcFatorRateio(equalizacao, aporteTotalNecessario = 0) {
+  return equalizacao.map((e) => ({
     ...e,
-    fatorRateio: somaAportes > 0 ? aportesPositivos[i] / somaAportes : 0
+    fatorRateio: aporteTotalNecessario > 0 ? (e.aporteNecessario || 0) / aporteTotalNecessario : 0
   }));
 }
 

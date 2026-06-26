@@ -400,7 +400,7 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if ((emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && empParts.length > 0) {
     const equalizacao = calcEqualizacao(empParts, aporteNecessario, emp, socios);
-    const eqComFator = calcFatorRateio(equalizacao);
+    const eqComFator = calcFatorRateio(equalizacao, aporteNecessario);
 
 
     y = drawSectionTitle(doc, y, 'Resumo Valores Aportados (Equalização)');

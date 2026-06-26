@@ -55,7 +55,7 @@ export default function Empreendimento() {
     const gcContasAPagar = calcContasAPagar(gcLancs, semanasOrdenadas, gcEmp, gcDespPorSemana, 4);
     const gcAporteTotal = gcContasAPagar > gcSaldoAtual ? gcContasAPagar - gcSaldoAtual + (gcEmp.margem_aporte_total || 0) : 0;
     const gcEqualizacao = calcEqualizacao(gcParts, gcAporteTotal, gcEmp, socios);
-    const gcEqComFator = calcFatorRateio(gcEqualizacao);
+    const gcEqComFator = calcFatorRateio(gcEqualizacao, gcAporteTotal);
     const gcAportesSemana = calcAportesPorSemana(gcLancs, gcEmp, gcSaldo, semanasOrdenadas, gcEqComFator, gcDespPorSemana, gcProjetos, gcAcumulados);
     const ricSocio = socios.find(s => s.nome.toLowerCase().includes('ric'));
     if (!ricSocio) return {};

@@ -68,7 +68,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
 
   const aporteTotal = contasAPagar > saldoAtual ? contasAPagar - saldoAtual + (emp.margem_aporte_total || 0) : 0;
   const equalizacao = calcEqualizacao(empParts, aporteTotal, emp, socios);
-  const eqComFator = calcFatorRateio(equalizacao);
+  const eqComFator = calcFatorRateio(equalizacao, aporteTotal);
   const aportesSemana = calcAportesPorSemana(lancamentos, emp, saldoEmp, semanas, eqComFator, despesasPorSemana, projetosInternos, acumulados);
 
   const getSocioNome = (id) => socios.find(s => s.id === id)?.nome || '—';

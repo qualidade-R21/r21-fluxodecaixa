@@ -196,10 +196,8 @@ export function calcAportesPorSemana(lancamentos, empreendimento, saldoEmp, sema
       const saldoAcumAnterior = saldosAcumulados[semanaAnterior.id] || 0;
       // Saldo efetivo = saldo acumulado + aportes já injetados
       const saldoEfetivo = saldoAcumAnterior + somaAportesAnteriores;
-      // Excel: SE(despesas > saldo_efetivo; despesas - saldo_efetivo + margem; 0)
-      aporteSemana = despesasSemana > saldoEfetivo
-        ? Math.max(0, despesasSemana - saldoEfetivo + (empreendimento.margem_seguranca_demais || 0))
-        : 0;
+      // Semanas subsequentes: sem condicional SE — permite valores negativos (excedente)
+      aporteSemana = despesasSemana - saldoEfetivo + (empreendimento.margem_seguranca_demais || 0);
     }
 
     somaAportesAnteriores += aporteSemana;

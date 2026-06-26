@@ -77,12 +77,8 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
     <div className="space-y-6">
       {/* Resumo Valores Aportados */}
       <Card>
-        <CardHeader className="pb-3 px-6 pt-6 flex items-center justify-between">
+        <CardHeader className="pb-3 px-6 pt-6">
           <CardTitle className="text-[20px] font-heading font-medium">Resumo Valores Aportados (Equalização)</CardTitle>
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] text-muted-foreground">Mostrar Fator</span>
-            <Switch checked={showFator} onCheckedChange={setShowFator} />
-          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto px-6 pb-6">
           <table className="w-full text-[15px] min-w-[700px]">
@@ -96,7 +92,14 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">% Atual</th>
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Total p/ Eq.</th>
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Aporte Nec.</th>
-                {showFator && <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Fator</th>}
+                <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={showFator ? '' : 'text-muted-foreground/50'}>Fator</span>
+                    <div className="flex items-center gap-1.5 normal-case">
+                      <Switch checked={showFator} onCheckedChange={setShowFator} className="scale-75" />
+                    </div>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +119,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                   <td className="text-right py-2 px-3 tabular-nums">{(e.percentualAtual * 100).toFixed(2)}%</td>
                   <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.totalParaEqualizar)}</td>
                   <td className={`text-right py-2 px-3 tabular-nums font-medium bg-[#F5F5F5] ${e.aporteNecessario < 0 ? 'text-primary' : ''}`}>{formatBRL(e.aporteNecessario)}</td>
-                  {showFator && <td className="text-right py-2 px-3 tabular-nums">{(e.fatorRateio * 100).toFixed(2)}%</td>}
+                  <td className="text-right py-2 px-3 tabular-nums">{showFator ? `${(e.fatorRateio * 100).toFixed(2)}%` : '—'}</td>
                 </tr>
               ))}
             </tbody>

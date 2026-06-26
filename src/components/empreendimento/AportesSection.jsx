@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatBRL, calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcContasAPagar } from '@/lib/calculos';
 
-function MoneyCell({ value, onChange }) {
+function MoneyCell({ value, onChange, suffix }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState('');
 
@@ -20,6 +20,10 @@ function MoneyCell({ value, onChange }) {
     const num = parseFloat(raw.replace(/\./g, '').replace(',', '.')) || 0;
     if (num !== (value || 0)) onChange(num);
   };
+
+  const displayValue = suffix === '%'
+    ? `${(value || 0).toFixed(2)}%`
+    : formatBRL(value || 0);
 
   return editing ? (
     <Input
@@ -35,7 +39,7 @@ function MoneyCell({ value, onChange }) {
       onClick={handleFocus}
       className="cursor-pointer hover:bg-muted px-1.5 py-0.5 rounded text-[15px] tabular-nums"
     >
-      {formatBRL(value || 0)}
+      {displayValue}
     </span>
   );
 }
@@ -93,7 +97,9 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
               {eqComFator.map((e, ei) => (
                 <tr key={e.socio_id} className={`border-b border-[#E5E5E5] ${ei % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
                   <td className="py-2 px-3 font-medium">{getSocioNome(e.socio_id)}</td>
-                  <td className="text-right py-2 px-3 tabular-nums">{e.percentual_sociedade?.toFixed(2)}%</td>
+                  <td className="text-right py-2 px-3 tabular-nums">
+                    <MoneyCell value={e.percentual_sociedade} onChange={(v) => handleParticipacaoChange(e.id, 'percentual_sociedade', v)} suffix="%" />
+                  </td>
                   <td className="text-right py-2 px-3 tabular-nums">
                     <MoneyCell value={e.valor_aportado} onChange={(v) => handleParticipacaoChange(e.id, 'valor_aportado', v)} />
                   </td>

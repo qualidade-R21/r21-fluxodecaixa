@@ -136,9 +136,11 @@ export function calcEqualizacao(participacoes, aporteTotalNecessario, emp, socio
       (isPDL && socioNome === 'ricardo') ||
       (isGC && socioNome === 'ric');
 
-    const aporteNecessario = usaSaldoADevolver
-      ? totalParaEqualizar - saldoADevolver
-      : totalParaEqualizar - (p.valor_aportado || 0);
+    const aporteNecessario = p.aporte_necessario_manual != null
+      ? p.aporte_necessario_manual
+      : (usaSaldoADevolver
+        ? totalParaEqualizar - saldoADevolver
+        : totalParaEqualizar - (p.valor_aportado || 0));
 
     return {
       ...p,

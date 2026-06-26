@@ -8,7 +8,7 @@ import { formatBRL } from '@/lib/calculos';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 
-export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessario, cicloId, numSemanasContas = 4, onNumSemanasChange }) {
+export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessario, cicloId, numSemanasContas = 4, onNumSemanasChange, saldoAtualOverride }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -80,10 +80,12 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {visibleItems.map(item => {
             const isInadimplencia = item.key === 'inadimplencia';
+            const isOverride = saldoAtualOverride !== undefined && item.key === 'saldo_atual';
+            const displayValue = isOverride ? saldoAtualOverride : form[item.key];
             return (
             <div key={item.key} className={`rounded-lg p-4 space-y-2 ${isInadimplencia ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
               <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">{item.label}</p>
-              {editing ? (
+              {editing && !isOverride ? (
                 <div className="space-y-2">
                   <Input
                     type="number"
@@ -102,10 +104,10 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
                 </div>
               ) : (
                 <div>
-                  <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${isInadimplencia ? 'text-primary' : (form[item.key] || 0) < 0 ? 'text-primary' : ''}`}>
-                    {formatBRL(form[item.key])}
+                  <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${isInadimplencia ? 'text-primary' : (displayValue || 0) < 0 ? 'text-primary' : ''}`}>
+                    {formatBRL(displayValue)}
                   </p>
-                  {form[item.bancoKey] && (
+                  {form[item.bancoKey] && !isOverride && (
                     <p className="text-[12px] text-muted-foreground mt-1">{form[item.bancoKey]}</p>
                   )}
                 </div>

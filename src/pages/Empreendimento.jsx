@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
-import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
+import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario, calcEqualizacao, calcFatorRateio, calcAportesPorSemana } from '@/lib/calculos';
 
 import TabelaSemanas from '@/components/empreendimento/TabelaSemanas';
 import TabelaMultiProjetos from '@/components/empreendimento/TabelaMultiProjetos';
@@ -26,6 +26,8 @@ export default function Empreendimento() {
 
   const emp = empreendimentos.find(e => e.id === id);
   const { data: projetos } = useProjetosInternos(emp?.tipo_fluxo === 'multi_projetos' ? emp?.id : null);
+  const gcEmpId = useMemo(() => emp?.despesa_dividida_r21 ? empreendimentos.find(e => e.tipo_fluxo === 'multi_projetos')?.id || null : null, [emp, empreendimentos]);
+  const { data: gcProjetos } = useProjetosInternos(gcEmpId);
   const { data: despesasProjetos } = useDespesasProjetos(semanaIds);
 
   const semanasOrdenadas = useMemo(() =>
@@ -33,7 +35,45 @@ export default function Empreendimento() {
   );
 
   const saldoEmp = saldos.find(s => s.empreendimento_id === id);
-  const empLancs = lancamentos.filter(l => l.empreendimento_id === id);
+
+  // AFAC defaults from Green Concept's RIC aporte (for RIC Participações)
+  const afacDefaults = useMemo(() => {
+    if (!emp?.despesa_dividida_r21 || !gcEmpId) return {};
+    const gcEmp = empreendimentos.find(e => e.id === gcEmpId);
+    if (!gcEmp) return {};
+    const gcLancs = lancamentos.filter(l => l.empreendimento_id === gcEmpId);
+    const gcSaldo = saldos.find(s => s.empreendimento_id === gcEmpId);
+    const gcParts = participacoes.filter(p => p.empreendimento_id === gcEmpId);
+    const gcDespPorSemana = {};
+    const gcProjetoIds = gcProjetos.map(p => p.id);
+    semanasOrdenadas.forEach(s => {
+      gcDespPorSemana[s.id] = despesasProjetos.filter(d => gcProjetoIds.includes(d.projeto_id) && d.semana_id === s.id).reduce((sum, d) => sum + (d.valor_despesa || 0), 0);
+    });
+    const gcAcumulados = calcSaldosAcumulados(gcLancs, gcEmp, gcSaldo, semanasOrdenadas, gcDespPorSemana, gcProjetos);
+    let gcSaldoAtual = gcSaldo?.saldo_atual || 0;
+    if (gcProjetos.length > 0) gcSaldoAtual = gcProjetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
+    const gcContasAPagar = calcContasAPagar(gcLancs, semanasOrdenadas, gcEmp, gcDespPorSemana, 4);
+    const gcAporteTotal = gcContasAPagar > gcSaldoAtual ? gcContasAPagar - gcSaldoAtual + (gcEmp.margem_aporte_total || 0) : 0;
+    const gcEqualizacao = calcEqualizacao(gcParts, gcAporteTotal, gcEmp, socios);
+    const gcEqComFator = calcFatorRateio(gcEqualizacao);
+    const gcAportesSemana = calcAportesPorSemana(gcLancs, gcEmp, gcSaldo, semanasOrdenadas, gcEqComFator, gcDespPorSemana, gcProjetos, gcAcumulados);
+    const ricSocio = socios.find(s => s.nome.toLowerCase().includes('ric'));
+    if (!ricSocio) return {};
+    const defaults = {};
+    semanasOrdenadas.forEach(s => { defaults[s.id] = gcAportesSemana[s.id]?.porSocio[ricSocio.id] || 0; });
+    return defaults;
+  }, [emp, gcEmpId, empreendimentos, lancamentos, saldos, participacoes, socios, gcProjetos, despesasProjetos, semanasOrdenadas]);
+
+  const lancamentosEffective = useMemo(() => {
+    if (Object.keys(afacDefaults).length === 0) return lancamentos;
+    return lancamentos.map(l => {
+      if (l.empreendimento_id !== id) return l;
+      if ((l.despesa_afac || 0) !== 0) return l;
+      return { ...l, despesa_afac: afacDefaults[l.semana_id] || 0 };
+    });
+  }, [lancamentos, afacDefaults, id]);
+
+  const empLancs = lancamentosEffective.filter(l => l.empreendimento_id === id);
 
   // Despesas por semana para multi_projetos
   const despPorSemana = useMemo(() => {
@@ -129,6 +169,7 @@ export default function Empreendimento() {
         cicloId={cicloAtivo?.id}
         numSemanasContas={numSemanasContas}
         onNumSemanasChange={setNumSemanasContas}
+        saldoAtualOverride={emp?.tipo_fluxo === 'multi_projetos' ? saldoAtual : undefined}
       />
 
       {/* Importação Sienge */}
@@ -162,7 +203,7 @@ export default function Empreendimento() {
       <AportesSection
         emp={emp}
         semanas={semanasOrdenadas}
-        lancamentos={lancamentos}
+        lancamentos={lancamentosEffective}
         saldoEmp={saldoEmp}
         participacoes={participacoes}
         socios={socios}

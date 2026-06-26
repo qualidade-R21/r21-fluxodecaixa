@@ -117,7 +117,10 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
               return (
                 <tr key={s.id} className={`border-b border-[#E5E5E5] hover:bg-muted/30 ${si % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}`} style={{ height: '44px' }}>
                   <td className="py-2 px-3">
-                    <Badge variant="outline" className="text-[13px] font-heading font-medium">{s.rotulo || `Sem ${s.numero}`}</Badge>
+                    <Badge variant="outline" className="text-[13px] font-heading font-medium flex flex-col items-start gap-0.5 py-1.5">
+                      <span className="text-[11px] text-muted-foreground leading-none">SEMANA {s.numero}</span>
+                      <span className="leading-none">{s.rotulo || `Sem ${s.numero}`}</span>
+                    </Badge>
                   </td>
                   {columns.map(col => (
                     <td key={col.key} className={`text-right py-2 px-3 ${col.isCalc ? 'bg-[#F5F5F5]' : ''}`}>

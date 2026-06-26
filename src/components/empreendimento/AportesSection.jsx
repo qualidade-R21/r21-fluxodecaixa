@@ -130,7 +130,8 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                 <th className="text-left py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">Sócio</th>
                 {semanas.map(s => (
                   <th key={s.id} className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A]">
-                    {s.rotulo || `Sem ${s.numero}`}
+                    <span className="block text-[11px] text-muted-foreground leading-none mb-0.5">SEMANA {s.numero}</span>
+                    <span className="leading-none">{s.rotulo || `Sem ${s.numero}`}</span>
                   </th>
                 ))}
                 <th className="text-right py-3 px-3 font-heading text-[13px] uppercase tracking-wide text-[#4A4A4A] bg-[#F5F5F5]">Total</th>

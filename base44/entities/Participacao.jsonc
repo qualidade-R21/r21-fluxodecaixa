@@ -20,11 +20,6 @@
     "valor_devolvido": {
       "type": "number",
       "default": 0
-    },
-    "aporte_necessario_manual": {
-      "type": "number",
-      "default": null,
-      "description": "Override manual do aporte necess\u00e1rio (se preenchido, substitui o c\u00e1lculo)"
     }
   },
   "required": [

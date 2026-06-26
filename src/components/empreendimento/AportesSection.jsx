@@ -103,9 +103,7 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
                   <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.saldoADevolver)}</td>
                   <td className="text-right py-2 px-3 tabular-nums">{(e.percentualAtual * 100).toFixed(2)}%</td>
                   <td className="text-right py-2 px-3 tabular-nums">{formatBRL(e.totalParaEqualizar)}</td>
-                  <td className={`text-right py-2 px-3 tabular-nums font-medium bg-[#F5F5F5] ${e.aporteNecessario < 0 ? 'text-primary' : ''}`}>
-                    <MoneyCell value={e.aporteNecessario} onChange={(v) => handleParticipacaoChange(e.id, 'aporte_necessario_manual', v)} />
-                  </td>
+                  <td className={`text-right py-2 px-3 tabular-nums font-medium bg-[#F5F5F5] ${e.aporteNecessario < 0 ? 'text-primary' : ''}`}>{formatBRL(e.aporteNecessario)}</td>
                   <td className="text-right py-2 px-3 tabular-nums">{(e.fatorRateio * 100).toFixed(2)}%</td>
                 </tr>
               ))}

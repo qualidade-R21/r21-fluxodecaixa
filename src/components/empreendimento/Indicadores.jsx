@@ -133,14 +133,22 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
             <p className="text-[26px] font-medium font-heading tabular-nums leading-tight">{formatBRL(contasAPagar)}</p>
           </div>
 
-          {(emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && (
-            <div className={`rounded-lg p-4 space-y-2 ${aporteNecessario > 0 ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
+          {(emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && (() => {
+            const isRIC = (emp.nome || '').toLowerCase().includes('ric');
+            const margemRIC = isRIC ? 1000 : 0;
+            const aporteComMargem = aporteNecessario + margemRIC;
+            return (
+            <div className={`rounded-lg p-4 space-y-2 ${aporteComMargem > 0 ? 'bg-primary/5 border border-primary/20' : 'bg-muted/40'}`}>
               <p className="text-[13px] uppercase tracking-wider text-[#4A4A4A] font-medium">Aporte Total Nec.</p>
-              <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${aporteNecessario > 0 ? 'text-primary' : ''}`}>
-                {formatBRL(aporteNecessario)}
+              <p className={`text-[26px] font-medium font-heading tabular-nums leading-tight ${aporteComMargem > 0 ? 'text-primary' : ''}`}>
+                {formatBRL(aporteComMargem)}
               </p>
+              {margemRIC > 0 && (
+                <p className="text-[12px] text-muted-foreground tabular-nums">sem margem: {formatBRL(aporteNecessario)}</p>
+              )}
             </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Observações */}

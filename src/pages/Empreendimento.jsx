@@ -64,14 +64,38 @@ export default function Empreendimento() {
     return defaults;
   }, [emp, gcEmpId, empreendimentos, lancamentos, saldos, participacoes, socios, gcProjetos, despesasProjetos, semanasOrdenadas]);
 
+  // RIC Saldo Acumulado defaults for GTR's Despesa Prev. (AFAC)
+  const ricSaldoDefaults = useMemo(() => {
+    if (!emp || emp.tipo_fluxo !== 'master') return {};
+    const ricEmp = empreendimentos.find(e => (e.nome || '').toLowerCase().includes('ric'));
+    if (!ricEmp) return {};
+    const ricLancs = lancamentos.filter(l => l.empreendimento_id === ricEmp.id);
+    const ricSaldo = saldos.find(s => s.empreendimento_id === ricEmp.id);
+    const ricAcumulados = calcSaldosAcumulados(ricLancs, ricEmp, ricSaldo, semanasOrdenadas, {}, []);
+    const defaults = {};
+    semanasOrdenadas.forEach(s => {
+      const saldo = ricAcumulados[s.id] || 0;
+      defaults[s.id] = saldo < 0 ? Math.abs(saldo) : 0;
+    });
+    return defaults;
+  }, [emp, empreendimentos, lancamentos, saldos, semanasOrdenadas]);
+
   const lancamentosEffective = useMemo(() => {
-    if (Object.keys(afacDefaults).length === 0) return lancamentos;
+    const hasAfac = Object.keys(afacDefaults).length > 0;
+    const hasRic = Object.keys(ricSaldoDefaults).length > 0;
+    if (!hasAfac && !hasRic) return lancamentos;
     return lancamentos.map(l => {
       if (l.empreendimento_id !== id) return l;
-      if ((l.despesa_afac || 0) !== 0) return l;
-      return { ...l, despesa_afac: afacDefaults[l.semana_id] || 0 };
+      let result = l;
+      if (hasAfac && (result.despesa_afac || 0) === 0) {
+        result = { ...result, despesa_afac: afacDefaults[l.semana_id] || 0 };
+      }
+      if (hasRic && (result.despesa_prevista || 0) === 0) {
+        result = { ...result, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
+      }
+      return result;
     });
-  }, [lancamentos, afacDefaults, id]);
+  }, [lancamentos, afacDefaults, ricSaldoDefaults, id]);
 
   const empLancs = lancamentosEffective.filter(l => l.empreendimento_id === id);
 

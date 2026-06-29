@@ -75,7 +75,7 @@ export default function Empreendimento() {
     const defaults = {};
     semanasOrdenadas.forEach(s => {
       const saldo = ricAcumulados[s.id] || 0;
-      defaults[s.id] = saldo < 0 ? Math.abs(saldo) : 0;
+      defaults[s.id] = saldo < 0 ? saldo : 0;
     });
     return defaults;
   }, [emp, empreendimentos, lancamentos, saldos, semanasOrdenadas]);

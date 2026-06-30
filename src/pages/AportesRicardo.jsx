@@ -65,7 +65,7 @@ export default function AportesRicardo() {
 
   const rows = [
     {
-      label: 'Lisboa (GTR na Solenne)',
+      label: 'Solenne (GTR)',
       getData: (semanaId) => aportesSolenne[semanaId]?.porSocio[socioGTR?.id] || 0,
     },
     {

@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos, useAporteOverridesRicardo, useSalvarAporteOverridesRicardo } from '@/lib/useFluxoData';
 import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Save, Loader2 } from 'lucide-react';
 
 function EditableCell({ value, onCommit }) {
   const [editing, setEditing] = useState(false);
@@ -51,6 +53,8 @@ export default function AportesRicardo() {
   const gcEmp = empreendimentos.find(e => e.tipo_fluxo === 'multi_projetos');
   const { data: projetos } = useProjetosInternos(gcEmp?.id);
   const { data: despesasProjetos } = useDespesasProjetos(semanaIds);
+  const { data: overridesSalvos } = useAporteOverridesRicardo(cicloAtivo?.id);
+  const salvarMutation = useSalvarAporteOverridesRicardo();
 
   const semanasOrdenadas = useMemo(() =>
     [...semanas].sort((a, b) => a.numero - b.numero), [semanas]
@@ -115,9 +119,38 @@ export default function AportesRicardo() {
 
   const [overrides, setOverrides] = useState({});
   const cellKey = (rowLabel, semanaId) => `${rowLabel}__${semanaId}`;
+
+  useEffect(() => {
+    if (!overridesSalvos) return;
+    const map = {};
+    overridesSalvos.forEach(r => {
+      map[`${r.row_label}__${r.semana_id}`] = r.valor;
+    });
+    setOverrides(map);
+  }, [overridesSalvos]);
+
   const getDisplayValue = (row, semanaId) => {
     const key = cellKey(row.label, semanaId);
     return key in overrides ? overrides[key] : row.getData(semanaId);
+  };
+
+  const hasUnsavedChanges = (() => {
+    if (!overridesSalvos) return Object.keys(overrides).length > 0;
+    const savedMap = {};
+    overridesSalvos.forEach(r => { savedMap[`${r.row_label}__${r.semana_id}`] = r.valor; });
+    const allKeys = new Set([...Object.keys(overrides), ...Object.keys(savedMap)]);
+    for (const k of allKeys) {
+      if ((overrides[k] || 0) !== (savedMap[k] || 0)) return true;
+    }
+    return false;
+  })();
+
+  const handleSalvar = () => {
+    const payload = Object.entries(overrides).map(([key, valor]) => {
+      const [rowLabel, semanaId] = key.split('__');
+      return { row_label: rowLabel, semana_id: semanaId, valor };
+    });
+    salvarMutation.mutate({ cicloId: cicloAtivo?.id, overrides: payload });
   };
 
   return (
@@ -182,6 +215,18 @@ export default function AportesRicardo() {
           </table>
         </CardContent>
       </Card>
-    </div>
-  );
-}
+
+      {hasUnsavedChanges && (
+        <div className="flex justify-end">
+          <Button onClick={handleSalvar} disabled={salvarMutation.isPending}>
+            {salvarMutation.isPending ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Salvando...</>
+            ) : (
+              <><Save className="h-4 w-4" /> Salvar Alterações</>
+            )}
+          </Button>
+        </div>
+      )}
+      </div>
+      );
+      }

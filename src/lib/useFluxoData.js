@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 export function useEmpreendimentos() {
@@ -76,6 +76,44 @@ export function useProjetosInternos(empreendimentoId) {
     },
     enabled: !!empreendimentoId,
     initialData: [],
+  });
+}
+
+export function useAporteOverridesRicardo(cicloId) {
+  return useQuery({
+    queryKey: ['aporte-overrides-ricardo', cicloId],
+    queryFn: async () => {
+      if (!cicloId) return [];
+      return base44.entities.AporteOverrideRicardo.filter({ ciclo_id: cicloId }, '-created_date', 200);
+    },
+    enabled: !!cicloId,
+    initialData: [],
+  });
+}
+
+export function useSalvarAporteOverridesRicardo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ cicloId, overrides }) => {
+      const existing = await base44.entities.AporteOverrideRicardo.filter({ ciclo_id: cicloId }, '-created_date', 200);
+      const map = {};
+      existing.forEach(r => { map[`${r.row_label}__${r.semana_id}`] = r; });
+      const toCreate = [];
+      const toUpdate = [];
+      overrides.forEach(o => {
+        const key = `${o.row_label}__${o.semana_id}`;
+        if (map[key]) {
+          toUpdate.push({ id: map[key].id, valor: o.valor });
+        } else {
+          toCreate.push({ row_label: o.row_label, semana_id: o.semana_id, ciclo_id: cicloId, valor: o.valor });
+        }
+      });
+      if (toCreate.length > 0) await base44.entities.AporteOverrideRicardo.bulkCreate(toCreate);
+      if (toUpdate.length > 0) await base44.entities.AporteOverrideRicardo.bulkUpdate(toUpdate);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['aporte-overrides-ricardo'] });
+    },
   });
 }
 

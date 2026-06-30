@@ -39,11 +39,40 @@ export default function Dashboard() {
     empreendimentos.filter(e => e.ativo !== false), [empreendimentos]
   );
 
+  // RIC (master) auto-fill: despesa_prevista = RIC's own negative saldo acumulado
+  const ricEmp = useMemo(() =>
+    empreendimentos.find(e => e.tipo_fluxo === 'master'), [empreendimentos]
+  );
+
+  const ricSaldoDefaults = useMemo(() => {
+    if (!ricEmp) return {};
+    const ricLancs = lancamentos.filter(l => l.empreendimento_id === ricEmp.id);
+    const ricSaldo = saldos.find(s => s.empreendimento_id === ricEmp.id);
+    const ricAcumulados = calcSaldosAcumulados(ricLancs, ricEmp, ricSaldo, semanasOrdenadas, {}, []);
+    const defaults = {};
+    semanasOrdenadas.forEach(s => {
+      const saldo = ricAcumulados[s.id] || 0;
+      defaults[s.id] = saldo < 0 ? saldo : 0;
+    });
+    return defaults;
+  }, [ricEmp, lancamentos, saldos, semanasOrdenadas]);
+
+  const lancamentosEffective = useMemo(() => {
+    if (!ricEmp || Object.keys(ricSaldoDefaults).length === 0) return lancamentos;
+    return lancamentos.map(l => {
+      if (l.empreendimento_id !== ricEmp.id) return l;
+      if ((l.despesa_prevista || 0) === 0) {
+        return { ...l, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
+      }
+      return l;
+    });
+  }, [lancamentos, ricEmp, ricSaldoDefaults]);
+
   // Pre-compute data per empreendimento
   const empData = useMemo(() => {
     const data = {};
     empAtivos.forEach(emp => {
-      const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
+      const empLancs = lancamentosEffective.filter(l => l.empreendimento_id === emp.id);
       const saldoEmp = saldos.find(s => s.empreendimento_id === emp.id);
       const projetos = emp.tipo_fluxo === 'multi_projetos' ? allProjetos : [];
 
@@ -86,7 +115,7 @@ export default function Dashboard() {
       };
     });
     return data;
-  }, [empAtivos, lancamentos, saldos, semanasOrdenadas, allProjetos, despesasProjetos, numSemanasContas]);
+  }, [empAtivos, lancamentosEffective, saldos, semanasOrdenadas, allProjetos, despesasProjetos, numSemanasContas]);
 
   const acumuladosPorEmp = useMemo(() => {
     const result = {};

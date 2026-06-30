@@ -66,9 +66,11 @@ export default function Dashboard() {
         saldoAtual = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
       }
 
-      const aporteNecessario = (emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos')
+      const isRIC = (emp.nome || '').toLowerCase().includes('ric');
+      const aporteBase = (emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos')
         ? calcAporteTotalNecessario(contasAPagar, saldoAtual, emp.margem_aporte_total || 0)
         : 0;
+      const aporteNecessario = isRIC ? aporteBase + (emp.margem_aporte_total || 0) : aporteBase;
 
       const lastSemana = semanasOrdenadas[semanasOrdenadas.length - 1];
       const saldoAcumuladoFinal = lastSemana ? (acumulados[lastSemana.id] || 0) : 0;

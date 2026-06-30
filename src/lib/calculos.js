@@ -96,7 +96,7 @@ export function calcContasAPagar(lancamentos, semanasOrdenadas, emp, despesasPro
 // ── D) Aporte Total Necessário ──
 
 export function calcAporteTotalNecessario(contasAPagar, saldoAtual, margemAporteTotal) {
-  return Math.max(0, contasAPagar - saldoAtual + (margemAporteTotal || 0));
+  return Math.max(0, contasAPagar - saldoAtual);
 }
 
 // ── E) Equalização societária ──

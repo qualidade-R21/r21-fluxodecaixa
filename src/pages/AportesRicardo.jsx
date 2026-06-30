@@ -1,7 +1,42 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumulados, formatBRL, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+
+function EditableCell({ value, onCommit }) {
+  const [editing, setEditing] = useState(false);
+  const [raw, setRaw] = useState('');
+
+  const handleFocus = () => {
+    setEditing(true);
+    setRaw(value ? String(value) : '');
+  };
+
+  const handleBlur = () => {
+    setEditing(false);
+    const num = parseFloat(raw.replace(/\./g, '').replace(',', '.')) || 0;
+    if (num !== (value || 0)) onCommit(num);
+  };
+
+  return editing ? (
+    <Input
+      type="text"
+      value={raw}
+      onChange={e => setRaw(e.target.value)}
+      onBlur={handleBlur}
+      autoFocus
+      className="h-8 text-[15px] w-28 text-right"
+    />
+  ) : (
+    <span
+      onClick={handleFocus}
+      className="cursor-pointer hover:bg-muted px-1.5 py-0.5 rounded text-[15px] tabular-nums"
+    >
+      {formatBRL(value || 0)}
+    </span>
+  );
+}
 
 export default function AportesRicardo() {
   const { data: empreendimentos } = useEmpreendimentos();
@@ -78,6 +113,13 @@ export default function AportesRicardo() {
     },
   ];
 
+  const [overrides, setOverrides] = useState({});
+  const cellKey = (rowLabel, semanaId) => `${rowLabel}__${semanaId}`;
+  const getDisplayValue = (row, semanaId) => {
+    const key = cellKey(row.label, semanaId);
+    return key in overrides ? overrides[key] : row.getData(semanaId);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -109,11 +151,14 @@ export default function AportesRicardo() {
                   <tr key={row.label} className={`border-b border-[#E5E5E5] ${ri % 2 === 0 ? 'bg-[#FAFAFA]' : ''}`} style={{ height: '44px' }}>
                     <td className="py-3 px-3 font-medium">{row.label}</td>
                     {semanasOrdenadas.map(s => {
-                      const val = row.getData(s.id);
+                      const val = getDisplayValue(row, s.id);
                       total += val;
                       return (
                         <td key={s.id} className={`text-right py-3 px-3 tabular-nums ${val > 0 ? 'font-medium' : 'text-muted-foreground'}`}>
-                          {formatBRL(val)}
+                          <EditableCell
+                            value={val}
+                            onCommit={(v) => setOverrides(prev => ({ ...prev, [cellKey(row.label, s.id)]: v }))}
+                          />
                         </td>
                       );
                     })}
@@ -124,13 +169,13 @@ export default function AportesRicardo() {
               <tr className="bg-[#F0F0F0] border-t-2 border-foreground">
                 <td className="py-3 px-3 font-semibold">TOTAL</td>
                 {semanasOrdenadas.map(s => {
-                  const total = rows.reduce((sum, r) => sum + r.getData(s.id), 0);
+                  const total = rows.reduce((sum, r) => sum + getDisplayValue(r, s.id), 0);
                   return (
                     <td key={s.id} className="text-right py-3 px-3 tabular-nums font-semibold">{formatBRL(total)}</td>
                   );
                 })}
                 <td className="text-right py-3 px-3 tabular-nums font-semibold">
-                  {formatBRL(semanasOrdenadas.reduce((sum, s) => sum + rows.reduce((rs, r) => rs + r.getData(s.id), 0), 0))}
+                  {formatBRL(semanasOrdenadas.reduce((sum, s) => sum + rows.reduce((rs, r) => rs + getDisplayValue(r, s.id), 0), 0))}
                 </td>
               </tr>
             </tbody>

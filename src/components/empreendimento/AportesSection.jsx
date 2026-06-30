@@ -68,7 +68,12 @@ export default function AportesSection({ emp, semanas, lancamentos, saldoEmp, pa
 
   const aporteTotal = calcAporteTotalNecessario(contasAPagar, saldoAtual, emp.margem_aporte_total || 0);
   const equalizacao = calcEqualizacao(empParts, aporteTotal, emp, socios);
-  const eqComFator = calcFatorRateio(equalizacao, aporteTotal);
+  const eqComFatorRaw = calcFatorRateio(equalizacao, aporteTotal);
+  const eqComFator = [...eqComFatorRaw].sort((a, b) => {
+    const nomeA = (socios.find(s => s.id === a.socio_id)?.nome || '').toLowerCase();
+    const nomeB = (socios.find(s => s.id === b.socio_id)?.nome || '').toLowerCase();
+    return nomeA.localeCompare(nomeB, 'pt-BR');
+  });
   const aportesSemana = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eqComFator, despesasPorSemana, projetosInternos, acumulados);
 
   const getSocioNome = (id) => socios.find(s => s.id === id)?.nome || '—';

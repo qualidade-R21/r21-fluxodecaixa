@@ -67,7 +67,10 @@ export function calcSaldosAcumulados(lancamentos, empreendimento, saldoEmp, sema
     const saldoSemana = calcSaldoSemana(lanc, empreendimento, despProjetos);
 
     if (i === 0) {
-      const saldoAtual = saldoEmp?.saldo_atual || 0;
+      let saldoAtual = saldoEmp?.saldo_atual || 0;
+      if (empreendimento.tipo_fluxo === 'multi_projetos' && projetosInternos.length > 0) {
+        saldoAtual = projetosInternos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
+      }
       const saldoAplicado = empreendimento.tem_saldo_aplicado ? (saldoEmp?.saldo_aplicado || 0) : 0;
       anterior = saldoAtual + saldoAplicado + saldoSemana;
     } else {

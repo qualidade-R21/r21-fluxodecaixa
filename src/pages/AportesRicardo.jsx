@@ -69,14 +69,6 @@ export default function AportesRicardo() {
       getData: (semanaId) => aportesSolenne[semanaId]?.porSocio[socioGTR?.id] || 0,
     },
     {
-      label: 'R21 (Despesa RIC)',
-      getData: (semanaId) => {
-        const ricEmp = empreendimentos.find(e => e.nome && e.nome.toLowerCase().includes('ric') && e.tipo_fluxo !== 'multi_projetos');
-        const lanc = lancamentos.find(l => l.empreendimento_id === ricEmp?.id && l.semana_id === semanaId);
-        return lanc?.despesa_r21 || 0;
-      },
-    },
-    {
       label: 'Ponta do Lobo (Ricardo)',
       getData: (semanaId) => aportesPontaDoLobo[semanaId]?.porSocio[socioRicardo?.id] || 0,
     },

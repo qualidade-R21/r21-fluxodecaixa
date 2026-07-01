@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
-import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario } from '@/lib/calculos';
+import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario, calcEqualizacao, calcFatorRateio, calcAportesPorSemana } from '@/lib/calculos';
 import EmpreendimentoCard from '@/components/dashboard/EmpreendimentoCard';
 import ComoAtualizarPanel from '@/components/dashboard/ComoAtualizarPanel';
 import SaldoChart from '@/components/dashboard/SaldoChart';
@@ -40,34 +40,78 @@ export default function Dashboard() {
     empreendimentos.filter(e => e.ativo !== false), [empreendimentos]
   );
 
-  // RIC (master) auto-fill: despesa_prevista = RIC's own negative saldo acumulado
-  const ricEmp = useMemo(() =>
+  // GC (multi_projetos) and GTR (master) and RIC (by name)
+  const gcEmp = useMemo(() =>
+    empreendimentos.find(e => e.tipo_fluxo === 'multi_projetos'), [empreendimentos]
+  );
+  const gtrEmp = useMemo(() =>
     empreendimentos.find(e => e.tipo_fluxo === 'master'), [empreendimentos]
   );
+  const ricEmpByName = useMemo(() =>
+    empreendimentos.find(e => (e.nome || '').toLowerCase().includes('ric')), [empreendimentos]
+  );
 
+  // AFAC defaults: GC's RIC sócio aporte per week (fills despesa_afac for empreendimentos with despesa_dividida_r21)
+  const afacDefaults = useMemo(() => {
+    if (!gcEmp) return {};
+    const gcLancs = lancamentos.filter(l => l.empreendimento_id === gcEmp.id);
+    const gcSaldo = saldos.find(s => s.empreendimento_id === gcEmp.id);
+    const gcParts = participacoes.filter(p => p.empreendimento_id === gcEmp.id);
+    const gcProjetos = allProjetos;
+    const gcProjetoIds = gcProjetos.map(p => p.id);
+    const gcDespPorSemana = {};
+    semanasOrdenadas.forEach(s => {
+      gcDespPorSemana[s.id] = despesasProjetos
+        .filter(d => gcProjetoIds.includes(d.projeto_id) && d.semana_id === s.id)
+        .reduce((sum, d) => sum + (d.valor_despesa || 0), 0);
+    });
+    const gcAcumulados = calcSaldosAcumulados(gcLancs, gcEmp, gcSaldo, semanasOrdenadas, gcDespPorSemana, gcProjetos);
+    let gcSaldoAtual = gcSaldo?.saldo_atual || 0;
+    if (gcProjetos.length > 0) gcSaldoAtual = gcProjetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
+    const gcContasAPagar = calcContasAPagar(gcLancs, semanasOrdenadas, gcEmp, gcDespPorSemana, 4);
+    const gcAporteTotal = calcAporteTotalNecessario(gcContasAPagar, gcSaldoAtual, gcEmp.margem_aporte_total || 0);
+    const gcEqualizacao = calcEqualizacao(gcParts, gcAporteTotal, gcEmp, socios);
+    const gcEqComFator = calcFatorRateio(gcEqualizacao, gcAporteTotal);
+    const gcAportesSemana = calcAportesPorSemana(gcLancs, gcEmp, gcSaldo, semanasOrdenadas, gcEqComFator, gcDespPorSemana, gcProjetos, gcAcumulados);
+    const ricSocio = socios.find(s => s.nome.toLowerCase().includes('ric'));
+    if (!ricSocio) return {};
+    const defaults = {};
+    semanasOrdenadas.forEach(s => { defaults[s.id] = gcAportesSemana[s.id]?.porSocio[ricSocio.id] || 0; });
+    return defaults;
+  }, [gcEmp, lancamentos, saldos, participacoes, allProjetos, despesasProjetos, semanasOrdenadas, socios]);
+
+  // RIC saldo defaults: RIC's negative saldo acumulado (fills despesa_prevista for GTR/master)
   const ricSaldoDefaults = useMemo(() => {
-    if (!ricEmp) return {};
-    const ricLancs = lancamentos.filter(l => l.empreendimento_id === ricEmp.id);
-    const ricSaldo = saldos.find(s => s.empreendimento_id === ricEmp.id);
-    const ricAcumulados = calcSaldosAcumulados(ricLancs, ricEmp, ricSaldo, semanasOrdenadas, {}, []);
+    if (!gtrEmp || !ricEmpByName) return {};
+    const ricLancs = lancamentos.filter(l => l.empreendimento_id === ricEmpByName.id);
+    const ricSaldo = saldos.find(s => s.empreendimento_id === ricEmpByName.id);
+    const ricAcumulados = calcSaldosAcumulados(ricLancs, ricEmpByName, ricSaldo, semanasOrdenadas, {}, []);
     const defaults = {};
     semanasOrdenadas.forEach(s => {
       const saldo = ricAcumulados[s.id] || 0;
       defaults[s.id] = saldo < 0 ? saldo : 0;
     });
     return defaults;
-  }, [ricEmp, lancamentos, saldos, semanasOrdenadas]);
+  }, [gtrEmp, ricEmpByName, lancamentos, saldos, semanasOrdenadas]);
 
   const lancamentosEffective = useMemo(() => {
-    if (!ricEmp || Object.keys(ricSaldoDefaults).length === 0) return lancamentos;
+    const hasAfac = Object.keys(afacDefaults).length > 0;
+    const hasRic = Object.keys(ricSaldoDefaults).length > 0;
+    if (!hasAfac && !hasRic) return lancamentos;
     return lancamentos.map(l => {
-      if (l.empreendimento_id !== ricEmp.id) return l;
-      if ((l.despesa_prevista || 0) === 0) {
-        return { ...l, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
+      let result = l;
+      if (hasAfac) {
+        const emp = empreendimentos.find(e => e.id === l.empreendimento_id);
+        if (emp?.despesa_dividida_r21 && (result.despesa_afac || 0) === 0) {
+          result = { ...result, despesa_afac: afacDefaults[l.semana_id] || 0 };
+        }
       }
-      return l;
+      if (hasRic && gtrEmp && l.empreendimento_id === gtrEmp.id && (result.despesa_prevista || 0) === 0) {
+        result = { ...result, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
+      }
+      return result;
     });
-  }, [lancamentos, ricEmp, ricSaldoDefaults]);
+  }, [lancamentos, afacDefaults, ricSaldoDefaults, empreendimentos, gtrEmp]);
 
   // Pre-compute data per empreendimento
   const empData = useMemo(() => {

@@ -10,6 +10,7 @@ import { Archive, Calendar, FileDown, PlusCircle } from 'lucide-react';
 import NovoCicloModal from '@/components/dashboard/NovoCicloModal';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/ui/use-toast';
 
 import { gerarPDFGeral } from '@/lib/gerarPDF';
 import { useSocios, useParticipacoes } from '@/lib/useFluxoData';
@@ -135,17 +136,26 @@ export default function Dashboard() {
   }, [numSemanasContas, semanasOrdenadas]);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [novoCicloOpen, setNovoCicloOpen] = useState(false);
 
   const handleArquivar = async () => {
-  try {
-    await base44.functions.invoke('arquivarVersaoSemanal', {});
-    queryClient.invalidateQueries({ queryKey: ['versoesSemanais'] });
-  } catch (err) {
-    alert('Erro ao arquivar versão: ' + (err?.message || 'Tente novamente.'));
-    console.error(err);
-  }
-};
+    try {
+      await base44.functions.invoke('arquivarVersaoSemanal', {});
+      queryClient.invalidateQueries({ queryKey: ['versoesSemanais'] });
+      toast({
+        title: 'Versão arquivada',
+        description: 'A versão da semana foi salva no Histórico com sucesso.',
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao arquivar',
+        description: err?.message || 'Tente novamente.',
+      });
+      console.error(err);
+    }
+  };
 
   const handleGerarPDFGeral = () => {
     gerarPDFGeral({

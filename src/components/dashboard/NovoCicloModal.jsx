@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { base44 } from '@/api/base44Client';
-import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, CheckCircle2, Archive } from 'lucide-react';
+import { Loader2, CheckCircle2, Archive, AlertTriangle } from 'lucide-react';
 
 export default function NovoCicloModal({ open, onOpenChange, cicloAtivo }) {
   const [step, setStep] = useState(1);
@@ -14,6 +14,20 @@ export default function NovoCicloModal({ open, onOpenChange, cicloAtivo }) {
   const [nome, setNome] = useState('');
   const [creating, setCreating] = useState(false);
   const qc = useQueryClient();
+
+  // Check if a version was already archived for the current cycle today
+  const { data: versoesExistentes, isLoading: versoesLoading } = useQuery({
+    queryKey: ['versoes-ciclo-atual', cicloAtivo?.id],
+    queryFn: async () => {
+      if (!cicloAtivo) return [];
+      const all = await base44.entities.VersaoSemanal.list('-created_date', 50);
+      return all.filter(v => v.ciclo_id === cicloAtivo.id);
+    },
+    enabled: open && !!cicloAtivo,
+  });
+
+  const hoje = new Date().toISOString().split('T')[0];
+  const jaArquivadoHoje = (versoesExistentes || []).some(v => v.data_referencia === hoje);
 
   const reset = () => {
     setStep(1);
@@ -30,9 +44,14 @@ export default function NovoCicloModal({ open, onOpenChange, cicloAtivo }) {
 
   const handleArchive = async () => {
     setArchiving(true);
-    await base44.functions.invoke('arquivarVersaoSemanal', {});
+    try {
+      await base44.functions.invoke('arquivarVersaoSemanal', {});
+      setArchived(true);
+    } catch (err) {
+      setArchiving(false);
+      throw err;
+    }
     setArchiving(false);
-    setArchived(true);
   };
 
   const handleCreate = async () => {
@@ -61,27 +80,50 @@ export default function NovoCicloModal({ open, onOpenChange, cicloAtivo }) {
                 Arquivar ciclo atual
               </DialogTitle>
               <DialogDescription className="text-[15px] pt-3">
-                Antes de criar um novo ciclo, o sistema vai arquivar automaticamente uma
-                versão completa do ciclo atual{" "}
-                <strong>{cicloAtivo?.nome}</strong> no
-                Histórico. Todos os dados atuais ficarão preservados para consulta futura.
+                {jaArquivadoHoje
+                  ? <>A versão do ciclo <strong>{cicloAtivo?.nome}</strong> já foi arquivada hoje. Não é necessário arquivar novamente.</>
+                  : <>Antes de criar um novo ciclo, o sistema vai arquivar automaticamente uma versão completa do ciclo atual <strong>{cicloAtivo?.nome}</strong> no Histórico. Todos os dados atuais ficarão preservados para consulta futura.</>
+                }
               </DialogDescription>
             </DialogHeader>
+
+            {versoesLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : jaArquivadoHoje ? (
+              <div className="flex items-start gap-2 rounded-md bg-green-50 border border-green-200 p-3 text-green-800 text-[13px] mt-3">
+                <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>Versão já arquivada hoje — você pode prosseguir para o novo ciclo sem duplicar o registro.</span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 p-3 text-amber-800 text-[13px] mt-3">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>Lembre-se: se você já arquivou manualmente a versão desta semana, não é necessário arquivar novamente aqui.</span>
+              </div>
+            )}
+
             <DialogFooter className="gap-2 mt-4">
               <Button variant="outline" onClick={handleCancel}>Cancelar</Button>
-              <Button
-                onClick={archived ? (() => setStep(2)) : handleArchive}
-                disabled={archiving}
-                className="gap-2"
-              >
-                {archiving ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Arquivando...</>
-                ) : archived ? (
-                  <><CheckCircle2 className="w-4 h-4 text-green-500" /> Versão arquivada — Próximo</>
-                ) : (
-                  <><Archive className="w-4 h-4" /> Arquivar e continuar</>
-                )}
-              </Button>
+              {jaArquivadoHoje ? (
+                <Button onClick={() => setStep(2)} className="gap-2">
+                  Continuar para Novo Ciclo
+                </Button>
+              ) : (
+                <Button
+                  onClick={archived ? (() => setStep(2)) : handleArchive}
+                  disabled={archiving}
+                  className="gap-2"
+                >
+                  {archiving ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Arquivando...</>
+                  ) : archived ? (
+                    <><CheckCircle2 className="w-4 h-4 text-green-500" /> Versão arquivada — Próximo</>
+                  ) : (
+                    <><Archive className="w-4 h-4" /> Arquivar e continuar</>
+                  )}
+                </Button>
+              )}
             </DialogFooter>
           </>
         )}

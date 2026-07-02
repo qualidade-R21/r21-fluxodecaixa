@@ -13,6 +13,7 @@ import { ArrowLeft, Building2, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { gerarPDFEmpreendimento } from '@/lib/gerarPDF';
 import { base44 } from '@/api/base44Client';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function Empreendimento() {
   const { id } = useParams();
@@ -120,6 +121,7 @@ export default function Empreendimento() {
 
   const [numSemanasContas, setNumSemanasContas] = useState(4);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const { toast } = useToast();
 
   const contasAPagar = useMemo(() =>
     calcContasAPagar(empLancs, semanasOrdenadas, emp || {}, despPorSemana, numSemanasContas),
@@ -181,6 +183,11 @@ export default function Empreendimento() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao gerar PDF',
+        description: error?.response?.data?.error || error?.message || 'Tente novamente.',
+      });
     } finally {
       setPdfLoading(false);
     }

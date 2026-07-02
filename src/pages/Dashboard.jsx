@@ -202,18 +202,27 @@ export default function Dashboard() {
   };
 
   const handleGerarPDFGeral = () => {
-    gerarPDFGeral({
-      empreendimentos: empAtivos,
-      saldos,
-      semanas: semanasOrdenadas,
-      lancamentos,
-      allProjetos,
-      despesasProjetos,
-      participacoes,
-      socios,
-      cicloAtivo,
-      empData
-    });
+    try {
+      gerarPDFGeral({
+        empreendimentos: empAtivos,
+        saldos,
+        semanas: semanasOrdenadas,
+        lancamentos,
+        allProjetos,
+        despesasProjetos,
+        participacoes,
+        socios,
+        cicloAtivo,
+        empData
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao gerar PDF',
+        description: error?.message || 'Tente novamente.',
+      });
+    }
   };
 
   if (!cicloAtivo) {

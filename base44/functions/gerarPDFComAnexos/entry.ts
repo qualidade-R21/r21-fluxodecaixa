@@ -42,13 +42,19 @@ Deno.serve(async (req) => {
 
     // Create merged PDF
     const mergedPdf = await PDFDocument.create();
+    let reportLoaded = false;
 
     // 1. Add the report PDF (generated on frontend)
     if (reportPdfBase64) {
-      const reportBytes = base64ToBytes(reportPdfBase64);
-      const reportPdf = await PDFDocument.load(reportBytes, { ignoreEncryption: true });
-      const reportPages = await mergedPdf.copyPages(reportPdf, reportPdf.getPageIndices());
-      reportPages.forEach(p => mergedPdf.addPage(p));
+      try {
+        const reportBytes = base64ToBytes(reportPdfBase64);
+        const reportPdf = await PDFDocument.load(reportBytes, { ignoreEncryption: true });
+        const reportPages = await mergedPdf.copyPages(reportPdf, reportPdf.getPageIndices());
+        reportPages.forEach(p => mergedPdf.addPage(p));
+        reportLoaded = true;
+      } catch (_e) {
+        // If pdf-lib can't parse the report PDF, return it as-is
+      }
     }
 
     const anexos = registros.filter(r => r.file_url);
@@ -69,11 +75,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    const mergedBytes = await mergedPdf.save();
-    const base64 = bytesToBase64(mergedBytes);
-
     const nomeCiclo = (ciclo_nome || 'Ciclo').replace(/[\s/]/g, '_');
     const fileName = `Fluxo de Caixa - ${empNome} - ${nomeCiclo}.pdf`;
+
+    // If report PDF couldn't be parsed by pdf-lib, return it directly
+    if (!reportLoaded && reportPdfBase64) {
+      return Response.json({ pdfBase64: reportPdfBase64, fileName });
+    }
+
+    const mergedBytes = await mergedPdf.save();
+    const base64 = bytesToBase64(mergedBytes);
 
     return Response.json({ pdfBase64: base64, fileName });
   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useEmpreendimentos } from '@/lib/useFluxoData';
@@ -23,6 +23,16 @@ export default function Historico() {
     queryKey: ['versoesSemanais'],
     queryFn: () => base44.entities.VersaoSemanal.list('-created_date', 50),
   });
+
+  const { data: ciclos } = useQuery({
+    queryKey: ['ciclos'],
+    queryFn: () => base44.entities.Ciclo.list(),
+  });
+  const cicloNomeById = React.useMemo(() => {
+    const map = {};
+    (ciclos || []).forEach(c => { map[c.id] = c.nome; });
+    return map;
+  }, [ciclos]);
 
   const filtered = filtroEmp === 'todos'
     ? versoes || []
@@ -92,7 +102,7 @@ export default function Historico() {
                       </div>
                       <div>
                         <CardTitle className="text-[16px] font-heading">
-                          {versao.data_referencia}
+                          {cicloNomeById[versao.ciclo_id] || versao.data_referencia}
                         </CardTitle>
                         <div className="flex items-center gap-2 text-[13px] text-muted-foreground mt-0.5">
                           <User className="w-3.5 h-3.5" />
@@ -157,7 +167,7 @@ export default function Historico() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir versão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a versão de <strong>{deleteTarget?.data_referencia}</strong>?
+              Tem certeza que deseja excluir a versão de <strong>{deleteTarget ? (cicloNomeById[deleteTarget.ciclo_id] || deleteTarget.data_referencia) : ''}</strong>?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>

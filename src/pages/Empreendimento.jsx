@@ -86,18 +86,29 @@ export default function Empreendimento() {
     const hasAfac = Object.keys(afacDefaults).length > 0;
     const hasRic = Object.keys(ricSaldoDefaults).length > 0;
     if (!hasAfac && !hasRic) return lancamentos;
-    return lancamentos.map(l => {
+    const result = lancamentos.map(l => {
       if (l.empreendimento_id !== id) return l;
-      let result = l;
-      if (hasAfac && (result.despesa_afac || 0) === 0) {
-        result = { ...result, despesa_afac: afacDefaults[l.semana_id] || 0 };
+      let res = l;
+      if (hasAfac && (res.despesa_afac || 0) === 0) {
+        res = { ...res, despesa_afac: afacDefaults[l.semana_id] || 0 };
       }
-      if (hasRic && (result.despesa_prevista || 0) === 0) {
-        result = { ...result, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
+      if (hasRic && (res.despesa_prevista || 0) === 0) {
+        res = { ...res, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
       }
-      return result;
+      return res;
     });
-  }, [lancamentos, afacDefaults, ricSaldoDefaults, id]);
+    // Add synthetic records for weeks without a lancamento (auto-fill still applies)
+    const existingWeeks = new Set(lancamentos.filter(l => l.empreendimento_id === id).map(l => l.semana_id));
+    semanasOrdenadas.forEach(s => {
+      if (!existingWeeks.has(s.id)) {
+        const synth = { empreendimento_id: id, semana_id: s.id };
+        if (hasAfac) synth.despesa_afac = afacDefaults[s.id] || 0;
+        if (hasRic) synth.despesa_prevista = ricSaldoDefaults[s.id] || 0;
+        result.push(synth);
+      }
+    });
+    return result;
+  }, [lancamentos, afacDefaults, ricSaldoDefaults, id, semanasOrdenadas]);
 
   const empLancs = lancamentosEffective.filter(l => l.empreendimento_id === id);
 

@@ -55,7 +55,7 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
 
   const handleChange = async (semanaId, field, value) => {
     const lanc = lancamentos.find(l => l.semana_id === semanaId && l.empreendimento_id === emp.id);
-    if (lanc) {
+    if (lanc?.id) {
       await base44.entities.LancamentoSemanal.update(lanc.id, { [field]: value });
     } else {
       await base44.entities.LancamentoSemanal.create({

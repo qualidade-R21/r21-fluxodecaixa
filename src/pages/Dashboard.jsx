@@ -98,20 +98,32 @@ export default function Dashboard() {
     const hasAfac = Object.keys(afacDefaults).length > 0;
     const hasRic = Object.keys(ricSaldoDefaults).length > 0;
     if (!hasAfac && !hasRic) return lancamentos;
-    return lancamentos.map(l => {
-      let result = l;
+    const result = lancamentos.map(l => {
+      let res = l;
       if (hasAfac) {
         const emp = empreendimentos.find(e => e.id === l.empreendimento_id);
-        if (emp?.despesa_dividida_r21 && (result.despesa_afac || 0) === 0) {
-          result = { ...result, despesa_afac: afacDefaults[l.semana_id] || 0 };
+        if (emp?.despesa_dividida_r21 && (res.despesa_afac || 0) === 0) {
+          res = { ...res, despesa_afac: afacDefaults[l.semana_id] || 0 };
         }
       }
-      if (hasRic && gtrEmp && l.empreendimento_id === gtrEmp.id && (result.despesa_prevista || 0) === 0) {
-        result = { ...result, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
+      if (hasRic && gtrEmp && l.empreendimento_id === gtrEmp.id && (res.despesa_prevista || 0) === 0) {
+        res = { ...res, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
       }
-      return result;
+      return res;
     });
-  }, [lancamentos, afacDefaults, ricSaldoDefaults, empreendimentos, gtrEmp]);
+    // Add synthetic GTR records for weeks without a lancamento
+    if (hasRic && gtrEmp) {
+      const existingGtrWeeks = new Set(lancamentos.filter(l => l.empreendimento_id === gtrEmp.id).map(l => l.semana_id));
+      semanasOrdenadas.forEach(s => {
+        if (!existingGtrWeeks.has(s.id)) {
+          const synth = { empreendimento_id: gtrEmp.id, semana_id: s.id };
+          synth.despesa_prevista = ricSaldoDefaults[s.id] || 0;
+          result.push(synth);
+        }
+      });
+    }
+    return result;
+  }, [lancamentos, afacDefaults, ricSaldoDefaults, empreendimentos, gtrEmp, semanasOrdenadas]);
 
   // Pre-compute data per empreendimento
   const empData = useMemo(() => {

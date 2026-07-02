@@ -3,6 +3,7 @@ import {
   formatBRL,
   calcSaldoSemana,
   calcContasAPagar,
+  calcAporteTotalNecessario,
   calcEqualizacao,
   calcFatorRateio,
   calcAportesPorSemana,
@@ -108,10 +109,7 @@ function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario) 
   if (emp.tem_inadimplencia) items.push({ label: 'Inadimplência', value: saldoEmp?.inadimplencia || 0 });
   items.push({ label: 'Contas a Pagar (Mês)', value: contasAPagar });
   if (emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') {
-    const isRIC = (emp.nome || '').toLowerCase().includes('ric');
-    const margemRIC = isRIC ? 1000 : 0;
-    const aporteComMargem = aporteNecessario + margemRIC;
-    items.push({ label: 'Aporte Total Necessário', value: aporteComMargem, highlight: aporteComMargem > 0 });
+    items.push({ label: 'Aporte Total Necessário', value: aporteNecessario, highlight: aporteNecessario > 0 });
   }
 
   const COLS = Math.min(items.length, 5);
@@ -599,7 +597,7 @@ export function gerarPDFGeral({
         saldoAtual = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
       }
       const cap = calcContasAPagar(empLancs, semanas, emp, despPorSemana);
-      const at = cap > saldoAtual ? cap - saldoAtual + (emp.margem_aporte_total || 0) : 0;
+      const at = calcAporteTotalNecessario(cap, saldoAtual, emp.margem_aporte_total || 0);
       const eq = calcFatorRateio(calcEqualizacao(empParts, at, emp, socios));
       const asAcumulados = calcSaldosAcumulados(empLancs, emp, saldoEmp, semanas, despPorSemana, projetos);
       const as = calcAportesPorSemana(empLancs, emp, saldoEmp, semanas, eq, despPorSemana, projetos, asAcumulados);

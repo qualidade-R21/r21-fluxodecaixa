@@ -108,7 +108,10 @@ function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario) 
   if (emp.tem_inadimplencia) items.push({ label: 'Inadimplência', value: saldoEmp?.inadimplencia || 0 });
   items.push({ label: 'Contas a Pagar (Mês)', value: contasAPagar });
   if (emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') {
-    items.push({ label: 'Aporte Total Necessário', value: aporteNecessario, highlight: aporteNecessario > 0 });
+    const isRIC = (emp.nome || '').toLowerCase().includes('ric');
+    const margemRIC = isRIC ? 1000 : 0;
+    const aporteComMargem = aporteNecessario + margemRIC;
+    items.push({ label: 'Aporte Total Necessário', value: aporteComMargem, highlight: aporteComMargem > 0 });
   }
 
   const COLS = Math.min(items.length, 5);

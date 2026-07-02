@@ -51,35 +51,9 @@ Deno.serve(async (req) => {
       reportPages.forEach(p => mergedPdf.addPage(p));
     }
 
-    // 2. Add separator page if there are annexes
     const anexos = registros.filter(r => r.file_url);
-    if (anexos.length > 0) {
-      const sepPage = mergedPdf.addPage([297, 210]); // A4 landscape
-      const font = await mergedPdf.embedFont(StandardFonts.HelveticaBold);
-      const fontNormal = await mergedPdf.embedFont(StandardFonts.Helvetica);
 
-      sepPage.drawRectangle({ x: 0, y: 195, width: 297, height: 15, color: rgb(0.68, 0, 0) });
-      sepPage.drawText('R21', { x: 10, y: 199, size: 10, font, color: rgb(1, 1, 1) });
-      sepPage.drawText('Documentos de Apoio — Relatórios Sienge', { x: 30, y: 199, size: 10, font, color: rgb(1, 1, 1) });
-
-      sepPage.drawText(empNome, { x: 10, y: 160, size: 18, font, color: rgb(0, 0, 0) });
-      sepPage.drawText(`Ciclo: ${ciclo_nome || ''}`, { x: 10, y: 148, size: 10, font: fontNormal, color: rgb(0.4, 0.4, 0.4) });
-
-      sepPage.drawText(`Foram anexados ${anexos.length} relatório(s) importado(s) do Sienge:`, {
-        x: 10, y: 125, size: 11, font: fontNormal, color: rgb(0, 0, 0)
-      });
-
-      let yPos = 108;
-      anexos.forEach((anexo, idx) => {
-        if (yPos < 20) return;
-        sepPage.drawText(`${idx + 1}. ${anexo.nome_arquivo || 'Arquivo'}  (${anexo.tipo || '—'})`, {
-          x: 15, y: yPos, size: 10, font: fontNormal, color: rgb(0.2, 0.2, 0.2)
-        });
-        yPos -= 14;
-      });
-    }
-
-    // 3. Add each Sienge PDF
+    // Add each Sienge PDF
     for (const reg of anexos) {
       if (!reg.file_url) continue;
       try {

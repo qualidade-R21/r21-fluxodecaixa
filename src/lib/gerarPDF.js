@@ -100,9 +100,13 @@ function drawSectionTitle(doc, y, text) {
 }
 
 // ── BLOCO DE INDICADORES ─────────────────────────────────────
-function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario) {
+function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, projetos = []) {
   const items = [];
-  items.push({ label: 'Saldo Atual', value: saldoEmp?.saldo_atual || 0 });
+  let saldoAtual = saldoEmp?.saldo_atual || 0;
+  if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
+    saldoAtual = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
+  }
+  items.push({ label: 'Saldo Atual', value: saldoAtual });
   if (emp.tem_saldo_aplicado) items.push({ label: 'Saldo Aplicado', value: saldoEmp?.saldo_aplicado || 0 });
   if (emp.despesa_dividida_r21) items.push({ label: 'Saldo Atual R21', value: saldoEmp?.saldo_atual_r21 || 0 });
   if (emp.tem_saldo_decoracao) items.push({ label: 'Saldo Decoração', value: saldoEmp?.saldo_decoracao || 0 });
@@ -340,7 +344,7 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
   y += 12;
 
   // Indicadores
-  y = drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario);
+  y = drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, projetos);
 
   // Fluxo Semanal
   y = drawSectionTitle(doc, y, 'Fluxo Semanal');

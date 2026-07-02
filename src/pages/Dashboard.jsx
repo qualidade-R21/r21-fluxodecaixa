@@ -205,7 +205,7 @@ export default function Dashboard() {
         empreendimentos: empAtivos,
         saldos,
         semanas: semanasOrdenadas,
-        lancamentos,
+        lancamentos: lancamentosEffective,
         allProjetos,
         despesasProjetos,
         participacoes,

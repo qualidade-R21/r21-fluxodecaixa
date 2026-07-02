@@ -83,7 +83,24 @@ export default function Dashboard() {
   // RIC saldo defaults: RIC's negative saldo acumulado (fills despesa_prevista for GTR/master)
   const ricSaldoDefaults = useMemo(() => {
     if (!gtrEmp || !ricEmpByName) return {};
-    const ricLancs = lancamentos.filter(l => l.empreendimento_id === ricEmpByName.id);
+    const hasAfac = Object.keys(afacDefaults).length > 0;
+    const ricLancsRaw = lancamentos.filter(l => l.empreendimento_id === ricEmpByName.id);
+    // Apply afac defaults to RIC's lancamentos before computing acumulados
+    const ricLancs = ricLancsRaw.map(l => {
+      if (hasAfac && (l.despesa_afac || 0) === 0) {
+        return { ...l, despesa_afac: afacDefaults[l.semana_id] || 0 };
+      }
+      return l;
+    });
+    // Add synthetic records for missing weeks
+    if (hasAfac) {
+      const existingRicWeeks = new Set(ricLancsRaw.map(l => l.semana_id));
+      semanasOrdenadas.forEach(s => {
+        if (!existingRicWeeks.has(s.id)) {
+          ricLancs.push({ empreendimento_id: ricEmpByName.id, semana_id: s.id, despesa_afac: afacDefaults[s.id] || 0 });
+        }
+      });
+    }
     const ricSaldo = saldos.find(s => s.empreendimento_id === ricEmpByName.id);
     const ricAcumulados = calcSaldosAcumulados(ricLancs, ricEmpByName, ricSaldo, semanasOrdenadas, {}, []);
     const defaults = {};
@@ -92,7 +109,7 @@ export default function Dashboard() {
       defaults[s.id] = saldo < 0 ? saldo : 0;
     });
     return defaults;
-  }, [gtrEmp, ricEmpByName, lancamentos, saldos, semanasOrdenadas]);
+  }, [gtrEmp, ricEmpByName, lancamentos, saldos, semanasOrdenadas, afacDefaults]);
 
   const lancamentosEffective = useMemo(() => {
     const hasAfac = Object.keys(afacDefaults).length > 0;

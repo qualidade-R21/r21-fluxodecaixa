@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEmpreendimentos, useCicloAtivo, useSemanas, useLancamentos, useSaldos, useSocios, useParticipacoes, useProjetosInternos, useDespesasProjetos } from '@/lib/useFluxoData';
 import { calcSaldosAcumulados, calcContasAPagar, calcAporteTotalNecessario, calcEqualizacao, calcFatorRateio, calcAportesPorSemana } from '@/lib/calculos';
@@ -28,7 +28,7 @@ export default function Empreendimento() {
 
   const emp = empreendimentos.find(e => e.id === id);
   const { data: projetos } = useProjetosInternos(emp?.tipo_fluxo === 'multi_projetos' ? emp?.id : null);
-  const gcEmpId = useMemo(() => emp?.despesa_dividida_r21 ? empreendimentos.find(e => e.tipo_fluxo === 'multi_projetos')?.id || null : null, [emp, empreendimentos]);
+  const gcEmpId = useMemo(() => (emp?.despesa_dividida_r21 || emp?.tipo_fluxo === 'master') ? empreendimentos.find(e => e.tipo_fluxo === 'multi_projetos')?.id || null : null, [emp, empreendimentos]);
   const { data: gcProjetos } = useProjetosInternos(gcEmpId);
   const { data: despesasProjetos } = useDespesasProjetos(semanaIds);
 
@@ -38,9 +38,9 @@ export default function Empreendimento() {
 
   const saldoEmp = saldos.find(s => s.empreendimento_id === id);
 
-  // AFAC defaults from Green Concept's RIC aporte (for RIC Participações)
-  const afacDefaults = useMemo(() => {
-    if (!emp?.despesa_dividida_r21 || !gcEmpId) return {};
+  // Helper: compute AFAC defaults for a target emp from Green Concept's RIC aporte
+  const computeAfacDefaults = useCallback((targetEmp) => {
+    if (!targetEmp?.despesa_dividida_r21 || !gcEmpId) return {};
     const gcEmp = empreendimentos.find(e => e.id === gcEmpId);
     if (!gcEmp) return {};
     const gcLancs = lancamentos.filter(l => l.empreendimento_id === gcEmpId);
@@ -64,14 +64,33 @@ export default function Empreendimento() {
     const defaults = {};
     semanasOrdenadas.forEach(s => { defaults[s.id] = gcAportesSemana[s.id]?.porSocio[ricSocio.id] || 0; });
     return defaults;
-  }, [emp, gcEmpId, empreendimentos, lancamentos, saldos, participacoes, socios, gcProjetos, despesasProjetos, semanasOrdenadas]);
+  }, [gcEmpId, empreendimentos, lancamentos, saldos, participacoes, socios, gcProjetos, despesasProjetos, semanasOrdenadas]);
+
+  // AFAC defaults from Green Concept's RIC aporte (for RIC Participações)
+  const afacDefaults = useMemo(() => computeAfacDefaults(emp), [emp, computeAfacDefaults]);
 
   // RIC Saldo Acumulado defaults for GTR's Despesa Prev. (AFAC)
   const ricSaldoDefaults = useMemo(() => {
     if (!emp || emp.tipo_fluxo !== 'master') return {};
     const ricEmp = empreendimentos.find(e => (e.nome || '').toLowerCase().includes('ric'));
     if (!ricEmp) return {};
-    const ricLancs = lancamentos.filter(l => l.empreendimento_id === ricEmp.id);
+    // Compute RIC's afac defaults (same as when viewing RIC's page)
+    const ricAfacDefaults = computeAfacDefaults(ricEmp);
+    // Apply afac defaults to RIC's lancamentos before computing acumulados
+    const ricLancsRaw = lancamentos.filter(l => l.empreendimento_id === ricEmp.id);
+    const ricLancs = ricLancsRaw.map(l => {
+      if ((l.despesa_afac || 0) === 0 && ricAfacDefaults[l.semana_id]) {
+        return { ...l, despesa_afac: ricAfacDefaults[l.semana_id] };
+      }
+      return l;
+    });
+    // Add synthetic records for missing weeks
+    const existingRicWeeks = new Set(ricLancsRaw.map(l => l.semana_id));
+    semanasOrdenadas.forEach(s => {
+      if (!existingRicWeeks.has(s.id)) {
+        ricLancs.push({ empreendimento_id: ricEmp.id, semana_id: s.id, despesa_afac: ricAfacDefaults[s.id] || 0 });
+      }
+    });
     const ricSaldo = saldos.find(s => s.empreendimento_id === ricEmp.id);
     const ricAcumulados = calcSaldosAcumulados(ricLancs, ricEmp, ricSaldo, semanasOrdenadas, {}, []);
     const defaults = {};
@@ -80,7 +99,7 @@ export default function Empreendimento() {
       defaults[s.id] = saldo < 0 ? saldo : 0;
     });
     return defaults;
-  }, [emp, empreendimentos, lancamentos, saldos, semanasOrdenadas]);
+  }, [emp, empreendimentos, lancamentos, saldos, semanasOrdenadas, computeAfacDefaults]);
 
   const lancamentosEffective = useMemo(() => {
     const hasAfac = Object.keys(afacDefaults).length > 0;

@@ -518,7 +518,9 @@ export function gerarPDFEmpreendimento({
   drawFooter(doc, geradoEm);
 
   const nomeCiclo = cicloAtivo?.nome?.replace(/[\s/]/g, '_') || 'Ciclo';
-  doc.save(`Fluxo de Caixa - ${emp.nome} - ${nomeCiclo}.pdf`);
+  const fileName = `Fluxo de Caixa - ${emp.nome} - ${nomeCiclo}.pdf`;
+  const arrayBuffer = doc.output('arraybuffer');
+  return { arrayBuffer, fileName };
 }
 
 // ── EXPORT: PDF GERAL ────────────────────────────────────────

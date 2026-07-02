@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, FileDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { gerarPDFEmpreendimento } from '@/lib/gerarPDF';
+import { base44 } from '@/api/base44Client';
 
 export default function Empreendimento() {
   const { id } = useParams();
@@ -118,6 +119,7 @@ export default function Empreendimento() {
   );
 
   const [numSemanasContas, setNumSemanasContas] = useState(4);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const contasAPagar = useMemo(() =>
     calcContasAPagar(empLancs, semanasOrdenadas, emp || {}, despPorSemana, numSemanasContas),
@@ -133,21 +135,55 @@ export default function Empreendimento() {
     ? calcAporteTotalNecessario(contasAPagar, saldoAtual, emp?.margem_aporte_total || 0)
     : 0;
 
-  const handleGerarPDF = () => {
-    gerarPDFEmpreendimento({
-      emp,
-      saldoEmp,
-      semanas: semanasOrdenadas,
-      lancamentos: empLancs,
-      projetos,
-      despesasProjetos,
-      acumulados,
-      contasAPagar,
-      aporteNecessario,
-      participacoes,
-      socios,
-      cicloAtivo
-    });
+  const handleGerarPDF = async () => {
+    setPdfLoading(true);
+    try {
+      const { arrayBuffer, fileName } = gerarPDFEmpreendimento({
+        emp,
+        saldoEmp,
+        semanas: semanasOrdenadas,
+        lancamentos: empLancs,
+        projetos,
+        despesasProjetos,
+        acumulados,
+        contasAPagar,
+        aporteNecessario,
+        participacoes,
+        socios,
+        cicloAtivo
+      });
+
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      const chunk = 8192;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+      }
+      const reportPdfBase64 = btoa(binary);
+
+      const response = await base44.functions.invoke('gerarPDFComAnexos', {
+        empreendimento_id: id,
+        ciclo_id: cicloAtivo?.id,
+        reportPdfBase64,
+        empreendimento_nome: emp.nome,
+        ciclo_nome: cicloAtivo?.nome
+      });
+
+      const byteChars = atob(response.data.pdfBase64);
+      const byteNums = new Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = response.data.fileName || fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   if (!emp) {
@@ -178,9 +214,18 @@ export default function Empreendimento() {
             </div>
           </div>
         </div>
-        <Button variant="outline" onClick={handleGerarPDF} className="gap-2 shrink-0 text-[15px]">
-          <FileDown className="w-4 h-4" />
-          Gerar PDF
+        <Button variant="outline" onClick={handleGerarPDF} disabled={pdfLoading} className="gap-2 shrink-0 text-[15px]">
+          {pdfLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Gerando...
+            </>
+          ) : (
+            <>
+              <FileDown className="w-4 h-4" />
+              Gerar PDF
+            </>
+          )}
         </Button>
       </div>
 

@@ -198,7 +198,7 @@ function drawTable(doc, y, headers, rows, colWidths, opts = {}) {
         display = formatBRL(cell);
         color = cell < 0 ? R21_RED : (cell > 0 ? GREEN : BLACK);
       } else if (typeof cell === 'object') {
-        display = cell.value ?? '—';
+        display = typeof cell.value === 'number' ? formatBRL(cell.value) : (cell.value ?? '—');
         color = cell.red ? R21_RED : (cell.green ? GREEN : BLACK);
       } else {
         display = String(cell);
@@ -357,8 +357,8 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
       }, 0);
       return [s.rotulo || `S${s.numero}`, ...projetos.map(p => {
         const d = despesasProjetos.find(d => d.projeto_id === p.id && d.semana_id === s.id);
-        return d?.valor_despesa || 0;
-      }), total, acumulados[s.id] || 0];
+        return { value: d?.valor_despesa || 0, red: true };
+      }), { value: total, red: true }, acumulados[s.id] || 0];
     });
     y = drawTable(doc, y, heads, tRows, widths);
   } else {
@@ -388,10 +388,13 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
       const lanc = empLancs.find(l => l.semana_id === s.id) || {};
       const ss = calcSaldoSemana(lanc, emp);
       const sa = acumulados[s.id] || 0;
+      const expenseKeys = ['despesa_consolidada', 'despesa_r21', 'despesa_afac', 'despesa_prevista'];
       return [s.rotulo || `S${s.numero}`, ...cols.map(c => {
         if (c.key === '_ss') return ss;
         if (c.key === '_sa') return sa;
-        return lanc[c.key] || 0;
+        const val = lanc[c.key] || 0;
+        if (expenseKeys.includes(c.key)) return { value: val, red: true };
+        return val;
       })];
     });
     y = drawTable(doc, y, heads, tRows, widths);

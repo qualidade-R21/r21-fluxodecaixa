@@ -20,6 +20,7 @@ const BODY_TOP = HEADER_H + 4;
 const BODY_BOT = PH - FOOTER_H - 2;
 
 const R21_RED = [173, 0, 0];
+const GREEN = [22, 163, 74];
 const BLACK = [0, 0, 0];
 const WHITE = [255, 255, 255];
 const GRAY_LIGHT = [247, 247, 247];
@@ -190,20 +191,20 @@ function drawTable(doc, y, headers, rows, colWidths, opts = {}) {
       const align = ci === 0 ? 'left' : 'right';
       const tx = align === 'left' ? cx + 1.5 : cx + colWidths[ci] - 1.5;
 
-      let display, red = false;
+      let display, color = BLACK;
       if (cell === null || cell === undefined) {
         display = '—';
       } else if (typeof cell === 'number') {
         display = formatBRL(cell);
-        red = cell < 0;
+        color = cell < 0 ? R21_RED : (cell > 0 ? GREEN : BLACK);
       } else if (typeof cell === 'object') {
         display = cell.value ?? '—';
-        red = !!cell.red;
+        color = cell.red ? R21_RED : (cell.green ? GREEN : BLACK);
       } else {
         display = String(cell);
       }
 
-      doc.setTextColor(...(red ? R21_RED : BLACK));
+      doc.setTextColor(...color);
       doc.text(display, tx, y + 4.3, { align });
       cx += colWidths[ci];
     });

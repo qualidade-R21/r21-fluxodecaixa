@@ -108,10 +108,10 @@ export default function Empreendimento() {
     const result = lancamentos.map(l => {
       if (l.empreendimento_id !== id) return l;
       let res = l;
-      if (hasAfac && (res.despesa_afac || 0) === 0) {
+      if (hasAfac && !res.afac_override && (res.despesa_afac || 0) === 0) {
         res = { ...res, despesa_afac: afacDefaults[l.semana_id] || 0 };
       }
-      if (hasRic && (res.despesa_prevista || 0) === 0) {
+      if (hasRic && !res.afac_override && (res.despesa_prevista || 0) === 0) {
         res = { ...res, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
       }
       return res;

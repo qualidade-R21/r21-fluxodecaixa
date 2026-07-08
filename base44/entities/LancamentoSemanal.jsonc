@@ -33,6 +33,11 @@
     "receita_prevista": {
       "type": "number",
       "default": 0
+    },
+    "afac_override": {
+      "type": "boolean",
+      "default": false,
+      "description": "Quando true, os valores de despesa_afac e despesa_prevista foram editados manualmente e n\u00e3o devem ser sobrescritos pelos defaults calculados"
     }
   },
   "required": [

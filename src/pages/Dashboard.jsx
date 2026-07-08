@@ -117,13 +117,13 @@ export default function Dashboard() {
     if (!hasAfac && !hasRic) return lancamentos;
     const result = lancamentos.map(l => {
       let res = l;
-      if (hasAfac) {
+      if (hasAfac && !res.afac_override) {
         const emp = empreendimentos.find(e => e.id === l.empreendimento_id);
         if (emp?.despesa_dividida_r21 && (res.despesa_afac || 0) === 0) {
           res = { ...res, despesa_afac: afacDefaults[l.semana_id] || 0 };
         }
       }
-      if (hasRic && gtrEmp && l.empreendimento_id === gtrEmp.id && (res.despesa_prevista || 0) === 0) {
+      if (hasRic && gtrEmp && l.empreendimento_id === gtrEmp.id && !res.afac_override && (res.despesa_prevista || 0) === 0) {
         res = { ...res, despesa_prevista: ricSaldoDefaults[l.semana_id] || 0 };
       }
       return res;

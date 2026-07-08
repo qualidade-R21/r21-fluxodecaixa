@@ -54,15 +54,20 @@ export default function TabelaSemanas({ emp, semanas, lancamentos, saldoEmp, acu
   const qc = useQueryClient();
 
   const handleChange = async (semanaId, field, value) => {
+    const isAfacField = field === 'despesa_afac' || field === 'despesa_prevista';
     const lanc = lancamentos.find(l => l.semana_id === semanaId && l.empreendimento_id === emp.id);
     if (lanc?.id) {
-      await base44.entities.LancamentoSemanal.update(lanc.id, { [field]: value });
+      const updates = { [field]: value };
+      if (isAfacField) updates.afac_override = true;
+      await base44.entities.LancamentoSemanal.update(lanc.id, updates);
     } else {
-      await base44.entities.LancamentoSemanal.create({
+      const payload = {
         empreendimento_id: emp.id,
         semana_id: semanaId,
         [field]: value
-      });
+      };
+      if (isAfacField) payload.afac_override = true;
+      await base44.entities.LancamentoSemanal.create(payload);
     }
     qc.invalidateQueries({ queryKey: ['lancamentos'] });
   };

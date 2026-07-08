@@ -4,7 +4,7 @@ import ComoAtualizarPanel from '@/components/dashboard/ComoAtualizarPanel';
 import SaldoChart from '@/components/dashboard/SaldoChart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Archive, Calendar, FileDown, PlusCircle } from 'lucide-react';
+import { Archive, Calendar, FileDown, PlusCircle, EyeOff, Eye } from 'lucide-react';
 import NovoCicloModal from '@/components/dashboard/NovoCicloModal';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 import { gerarPDFGeral } from '@/lib/gerarPDF';
 import { usePdfData } from '@/hooks/usePdfData';
+import { useModoOculto } from '@/hooks/useModoOculto';
 
 export default function Dashboard() {
   const {
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [novoCicloOpen, setNovoCicloOpen] = useState(false);
+  const { modoOculto, toggle: toggleModoOculto } = useModoOculto();
 
   const handleArquivar = async () => {
     try {
@@ -106,6 +108,15 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={toggleModoOculto}
+            className="gap-2 text-[15px]"
+            title={modoOculto ? 'Mostrar valores' : 'Ocultar valores'}
+          >
+            {modoOculto ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            {modoOculto ? 'Mostrar' : 'Ocultar'}
+          </Button>
           <Button variant="outline" onClick={handleArquivar} className="gap-2 text-[15px]">
             <Archive className="w-4 h-4" />
             Arquivar versão da semana
@@ -135,6 +146,7 @@ export default function Dashboard() {
             aporteNecessario={empData[emp.id]?.aporteNecessario || 0}
             temSaldoNegativo={empData[emp.id]?.temSaldoNegativo || false}
             contasAPagarLabel={contasAPagarLabel}
+            modoOculto={modoOculto}
           />
         ))}
       </div>
@@ -144,6 +156,7 @@ export default function Dashboard() {
         empreendimentos={empAtivos}
         semanas={semanasOrdenadas}
         acumuladosPorEmp={acumuladosPorEmp}
+        modoOculto={modoOculto}
       />
 
       <NovoCicloModal

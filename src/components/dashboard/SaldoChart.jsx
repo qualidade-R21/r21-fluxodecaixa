@@ -5,14 +5,14 @@ import { formatBRL } from '@/lib/calculos';
 
 const COLORS = ['#AD0000', '#000000', '#4A4A4A', '#2563eb', '#16a34a', '#ca8a04', '#9333ea', '#0891b2'];
 
-export default function SaldoChart({ empreendimentos, semanas, acumuladosPorEmp }) {
+export default function SaldoChart({ empreendimentos, semanas, acumuladosPorEmp, modoOculto }) {
   if (!semanas || semanas.length === 0) return null;
 
   const ultimaSemana = semanas[semanas.length - 1];
 
   const chartData = empreendimentos
     .map(emp => ({
-      name: emp.nome,
+      name: modoOculto ? '••••••' : emp.nome,
       value: acumuladosPorEmp[emp.id]?.[ultimaSemana.id] || 0,
     }))
     .sort((a, b) => b.value - a.value);
@@ -23,8 +23,8 @@ export default function SaldoChart({ empreendimentos, semanas, acumuladosPorEmp 
     return (
       <div className="bg-card border border-border rounded p-3 shadow-lg">
         <p className="font-heading font-bold text-[14px] mb-1">{label}</p>
-        <p className={`text-[14px] font-semibold ${val < 0 ? 'text-primary' : ''}`}>
-          {formatBRL(val)}
+        <p className={`text-[14px] font-semibold ${!modoOculto && val < 0 ? 'text-primary' : ''}`}>
+          {modoOculto ? '••••••' : formatBRL(val)}
         </p>
       </div>
     );
@@ -49,7 +49,7 @@ export default function SaldoChart({ empreendimentos, semanas, acumuladosPorEmp 
               <XAxis
                 type="number"
                 tick={{ fontSize: 13, fontFamily: 'Ubuntu' }}
-                tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
+                tickFormatter={v => modoOculto ? '••' : `${(v / 1000).toFixed(0)}k`}
               />
               <YAxis
                 type="category"

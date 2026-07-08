@@ -248,7 +248,7 @@ function drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos) {
   empreendimentos.forEach(emp => {
     semanas.forEach(s => {
       const v = acumuladosPorEmp[emp.id]?.[s.id];
-      if (v !== undefined) allVals.push(v);
+      if (typeof v === 'number' && !isNaN(v)) allVals.push(v);
     });
   });
   if (allVals.length === 0) return y + CHART_H + 10;
@@ -306,17 +306,28 @@ function drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos) {
 
   empreendimentos.forEach((emp, ei) => {
     const color = palette[ei % palette.length];
-    const pts = semanas.map((s, si) => ({
-      x: gX + (si / Math.max(semanas.length - 1, 1)) * gW,
-      y: gY + CHART_H - ((( acumuladosPorEmp[emp.id]?.[s.id] || 0) - minVal) / range) * CHART_H
-    }));
+    const pts = semanas.map((s, si) => {
+      const val = acumuladosPorEmp[emp.id]?.[s.id] || 0;
+      const yVal = gY + CHART_H - ((val - minVal) / range) * CHART_H;
+      return {
+        x: gX + (si / Math.max(semanas.length - 1, 1)) * gW,
+        y: isNaN(yVal) ? gY + CHART_H : yVal
+      };
+    });
 
     doc.setDrawColor(...color);
     doc.setLineWidth(0.7);
     for (let pi = 0; pi < pts.length - 1; pi++) {
-      doc.line(pts[pi].x, pts[pi].y, pts[pi + 1].x, pts[pi + 1].y);
+      if (!isNaN(pts[pi].x) && !isNaN(pts[pi].y) && !isNaN(pts[pi + 1].x) && !isNaN(pts[pi + 1].y)) {
+        doc.line(pts[pi].x, pts[pi].y, pts[pi + 1].x, pts[pi + 1].y);
+      }
     }
-    pts.forEach(pt => { doc.setFillColor(...color); doc.circle(pt.x, pt.y, 0.8, 'F'); });
+    pts.forEach(pt => {
+      if (!isNaN(pt.x) && !isNaN(pt.y)) {
+        doc.setFillColor(...color);
+        doc.circle(pt.x, pt.y, 0.8, 'F');
+      }
+    });
     legendItems.push({ nome: emp.nome, color });
   });
 
@@ -544,7 +555,7 @@ export function gerarPDFGeral({
   empreendimentos, saldos, semanas, lancamentos, allProjetos, despesasProjetos,
   participacoes, socios, cicloAtivo, empData, numSemanasContas = 4
 }) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: false });
   const geradoEm = nowStr();
   const subtitulo = buildSubtitulo(cicloAtivo, semanas);
   doc.__titulo = 'Fluxo de Caixa Semanal — Relatório Geral';
@@ -652,5 +663,13 @@ export function gerarPDFGeral({
   drawFooter(doc, geradoEm);
 
   const nomeCiclo = cicloAtivo?.nome?.replace(/[\s/]/g, '_') || 'Ciclo';
-  doc.save(`Fluxo de Caixa - Geral - ${nomeCiclo}.pdf`);
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `Fluxo de Caixa - Geral - ${nomeCiclo}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }

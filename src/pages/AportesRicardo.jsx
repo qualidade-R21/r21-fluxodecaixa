@@ -4,7 +4,10 @@ import { calcEqualizacao, calcFatorRateio, calcAportesPorSemana, calcSaldosAcumu
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, FileDown } from 'lucide-react';
+import { usePdfData } from '@/hooks/usePdfData';
+import { gerarPDFGeral } from '@/lib/gerarPDF';
+import { useToast } from '@/components/ui/use-toast';
 
 function EditableCell({ value, onCommit }) {
   const [editing, setEditing] = useState(false);
@@ -55,6 +58,9 @@ export default function AportesRicardo() {
   const { data: despesasProjetos } = useDespesasProjetos(semanaIds);
   const { data: overridesSalvos } = useAporteOverridesRicardo(cicloAtivo?.id);
   const salvarMutation = useSalvarAporteOverridesRicardo();
+
+  const pdfData = usePdfData();
+  const { toast } = useToast();
 
   const semanasOrdenadas = useMemo(() =>
     [...semanas].sort((a, b) => a.numero - b.numero), [semanas]
@@ -153,11 +159,54 @@ export default function AportesRicardo() {
     salvarMutation.mutate({ cicloId: cicloAtivo?.id, overrides: payload });
   };
 
+  const handleGerarPDF = () => {
+    try {
+      gerarPDFGeral({
+        empreendimentos: pdfData.empAtivos,
+        saldos: pdfData.saldos,
+        semanas: pdfData.semanas,
+        lancamentos: pdfData.lancamentos,
+        allProjetos: pdfData.allProjetos,
+        despesasProjetos: pdfData.despesasProjetos,
+        participacoes: pdfData.participacoes,
+        socios: pdfData.socios,
+        cicloAtivo: pdfData.cicloAtivo,
+        empData: pdfData.empData,
+        numSemanasContas: pdfData.numSemanasContas,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao gerar PDF',
+        description: error?.message || 'Tente novamente.',
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-[28px] font-heading font-bold">Aportes Ricardo</h1>
-        <p className="text-[14px] text-muted-foreground mt-1">Consolidação dos aportes vinculados ao Ricardo</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-4">
+            <h1 className="text-[28px] font-heading font-bold">Aportes Ricardo</h1>
+            <div className="flex bg-background rounded border border-border text-[12px]">
+              <button
+                onClick={() => pdfData.setNumSemanasContas(4)}
+                className={`px-2.5 py-1 rounded-l font-medium transition-colors ${pdfData.numSemanasContas === 4 ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              >04 sem</button>
+              <button
+                onClick={() => pdfData.setNumSemanasContas(6)}
+                className={`px-2.5 py-1 rounded-r font-medium transition-colors ${pdfData.numSemanasContas === 6 ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+              >06 sem</button>
+            </div>
+          </div>
+          <p className="text-[14px] text-muted-foreground mt-1">Consolidação dos aportes vinculados ao Ricardo</p>
+        </div>
+        <Button variant="outline" onClick={handleGerarPDF} className="gap-2 text-[15px]">
+          <FileDown className="w-4 h-4" />
+          Gerar PDF Geral
+        </Button>
       </div>
 
       <Card>

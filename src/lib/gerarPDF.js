@@ -383,7 +383,15 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
         return { value: d?.valor_despesa || 0, red: true };
       }), { value: total, red: true }, acumulados[s.id] || 0];
     });
-    y = drawTable(doc, y, heads, tRows, widths);
+    // Linha "Disponível em Conta" — saldo_disponivel de cada projeto
+    const dispTotal = projetos.reduce((sum, p) => sum + (p.saldo_disponivel || 0), 0);
+    tRows.push([
+      'Disponível em Conta',
+      ...projetos.map(p => p.saldo_disponivel || 0),
+      dispTotal,
+      null
+    ]);
+    y = drawTable(doc, y, heads, tRows, widths, { boldLastRow: true });
   } else {
     const empLancs = lancamentos.filter(l => l.empreendimento_id === emp.id);
     const cols = [];

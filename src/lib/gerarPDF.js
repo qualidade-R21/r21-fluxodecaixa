@@ -296,7 +296,7 @@ function drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos) {
     const sx = gX + (si / Math.max(semanas.length - 1, 1)) * gW;
     sf(doc, false, 5);
     doc.setTextColor(...GRAY_DARK);
-    const lbl = s.rotulo ? s.rotulo.substring(0, 11) : `S${s.numero}`;
+    const lbl = s.rotulo ? s.rotulo.substring(0, 13) : `S${s.numero}`;
     doc.text(lbl, sx, gY + CHART_H + 4, { align: 'center' });
   });
 
@@ -474,7 +474,7 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
     y = drawSectionTitle(doc, y, 'Aportes por Semana');
     const firstW = 30;
     const asColW = (CW - firstW) / (semanas.length + 1);
-    const asHeads = ['Sócio', ...semanas.map(s => s.rotulo ? s.rotulo.substring(0, 11) : `S${s.numero}`), 'Total'];
+    const asHeads = ['Sócio', ...semanas.map(s => s.rotulo ? s.rotulo.substring(0, 13) : `S${s.numero}`), 'Total'];
     const asWidths = [firstW, ...semanas.map(() => asColW), asColW];
     const asRows = [];
     eqComFator.forEach(e => {
@@ -602,7 +602,7 @@ export function gerarPDFGeral({
     y = drawSectionTitle(doc, y, 'Aportes Consolidados por Semana');
     const aFirstW = 40;
     const aColW = (CW - aFirstW) / (semanas.length + 1);
-    const aHeads = ['Empreendimento', ...semanas.map(s => s.rotulo ? s.rotulo.substring(0, 11) : `S${s.numero}`), 'Total'];
+    const aHeads = ['Empreendimento', ...semanas.map(s => s.rotulo ? s.rotulo.substring(0, 13) : `S${s.numero}`), 'Total'];
     const aWidths = [aFirstW, ...semanas.map(() => aColW), aColW];
     const aRows = [];
 

@@ -56,7 +56,7 @@ export default function Indicadores({ emp, saldoEmp, contasAPagar, aporteNecessa
     { label: 'Saldo Atual', key: 'saldo_atual', bancoKey: 'banco_saldo_atual', show: true },
     { label: 'Saldo Aplicado', key: 'saldo_aplicado', bancoKey: 'banco_aplicacao', show: emp.tem_saldo_aplicado },
     { label: 'Saldo Atual R21', key: 'saldo_atual_r21', bancoKey: 'banco_saldo_r21', show: emp.despesa_dividida_r21 },
-    { label: 'Saldo Decoração (Bradesco)', key: 'saldo_decoracao', bancoKey: 'banco_decoracao', show: emp.tem_saldo_decoracao },
+    { label: 'Saldo Decoração', key: 'saldo_decoracao', bancoKey: 'banco_decoracao', show: emp.tem_saldo_decoracao },
     { label: 'Inadimplência', key: 'inadimplencia', bancoKey: 'banco_inadimplencia', show: emp.tem_inadimplencia },
   ];
 

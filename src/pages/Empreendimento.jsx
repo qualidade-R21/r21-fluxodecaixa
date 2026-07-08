@@ -182,7 +182,8 @@ export default function Empreendimento() {
         aporteNecessario,
         participacoes,
         socios,
-        cicloAtivo
+        cicloAtivo,
+        numSemanasContas
       });
 
       const bytes = new Uint8Array(arrayBuffer);

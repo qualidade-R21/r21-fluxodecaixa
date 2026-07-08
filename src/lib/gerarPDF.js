@@ -100,7 +100,7 @@ function drawSectionTitle(doc, y, text) {
 }
 
 // ── BLOCO DE INDICADORES ─────────────────────────────────────
-function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, projetos = []) {
+function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, projetos = [], semanas = [], numSemanasContas = 4) {
   const items = [];
   let saldoAtual = saldoEmp?.saldo_atual || 0;
   if (emp.tipo_fluxo === 'multi_projetos' && projetos.length > 0) {
@@ -111,7 +111,14 @@ function drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, 
   if (emp.despesa_dividida_r21) items.push({ label: 'Saldo Atual R21', value: saldoEmp?.saldo_atual_r21 || 0 });
   if (emp.tem_saldo_decoracao) items.push({ label: 'Saldo Decoração', value: saldoEmp?.saldo_decoracao || 0 });
   if (emp.tem_inadimplencia) items.push({ label: 'Inadimplência', value: saldoEmp?.inadimplencia || 0 });
-  items.push({ label: 'Contas a Pagar (Mês)', value: contasAPagar });
+  const capIdx = Math.min(numSemanasContas, semanas.length) - 1;
+  const capSemana = capIdx >= 0 ? semanas[capIdx] : null;
+  let capLabel = 'Contas a Pagar (Mês)';
+  if (capSemana?.data_fim) {
+    const [yy, mm, dd] = capSemana.data_fim.split('-');
+    capLabel = `Contas a Pagar até ${dd}/${mm}`;
+  }
+  items.push({ label: capLabel, value: contasAPagar });
   if (emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') {
     items.push({ label: 'Aporte Total Necessário', value: aporteNecessario, highlight: aporteNecessario > 0 });
   }
@@ -332,7 +339,7 @@ function drawLineChart(doc, y, semanas, acumuladosPorEmp, empreendimentos) {
 
 // ── SEÇÃO COMPLETA DE UM EMPREENDIMENTO ──────────────────────
 function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos, despesasProjetos,
-  acumulados, contasAPagar, aporteNecessario, participacoes, socios }) {
+  acumulados, contasAPagar, aporteNecessario, participacoes, socios, numSemanasContas = 4 }) {
 
   // Barra título
   y = ensureSpace(doc, y, 12);
@@ -344,7 +351,7 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
   y += 12;
 
   // Indicadores
-  y = drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, projetos);
+  y = drawIndicadores(doc, y, emp, saldoEmp, contasAPagar, aporteNecessario, projetos, semanas, numSemanasContas);
 
   // Fluxo Semanal
   y = drawSectionTitle(doc, y, 'Fluxo Semanal');
@@ -505,7 +512,7 @@ function buildSubtitulo(cicloAtivo, semanas) {
 // ── EXPORT: PDF POR EMPREENDIMENTO ───────────────────────────
 export function gerarPDFEmpreendimento({
   emp, saldoEmp, semanas, lancamentos, projetos, despesasProjetos,
-  acumulados, contasAPagar, aporteNecessario, participacoes, socios, cicloAtivo
+  acumulados, contasAPagar, aporteNecessario, participacoes, socios, cicloAtivo, numSemanasContas = 4
 }) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const geradoEm = nowStr();
@@ -521,7 +528,7 @@ export function gerarPDFEmpreendimento({
   drawEmpSection(doc, BODY_TOP, {
     emp, saldoEmp, semanas, lancamentos, projetos: projetos || [],
     despesasProjetos: despesasProjetos || [], acumulados, contasAPagar,
-    aporteNecessario, participacoes, socios
+    aporteNecessario, participacoes, socios, numSemanasContas
   });
 
   drawFooter(doc, geradoEm);
@@ -535,7 +542,7 @@ export function gerarPDFEmpreendimento({
 // ── EXPORT: PDF GERAL ────────────────────────────────────────
 export function gerarPDFGeral({
   empreendimentos, saldos, semanas, lancamentos, allProjetos, despesasProjetos,
-  participacoes, socios, cicloAtivo, empData
+  participacoes, socios, cicloAtivo, empData, numSemanasContas = 4
 }) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const geradoEm = nowStr();
@@ -638,7 +645,7 @@ export function gerarPDFGeral({
       acumulados: d.acumulados || {},
       contasAPagar: d.contasAPagar || 0,
       aporteNecessario: d.aporteNecessario || 0,
-      participacoes, socios
+      participacoes, socios, numSemanasContas
     });
   });
 

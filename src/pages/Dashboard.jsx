@@ -240,7 +240,8 @@ export default function Dashboard() {
         participacoes,
         socios,
         cicloAtivo,
-        empData
+        empData,
+        numSemanasContas
       });
     } catch (error) {
       console.error(error);

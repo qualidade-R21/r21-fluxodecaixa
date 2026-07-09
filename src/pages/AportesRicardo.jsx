@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Save, Loader2, FileDown } from 'lucide-react';
 import { usePdfData } from '@/hooks/usePdfData';
-import { gerarPDFGeral } from '@/lib/gerarPDF';
+import { gerarPDFAportesRicardo } from '@/lib/gerarPDFAportesRicardo';
 import { useToast } from '@/components/ui/use-toast';
 
 function EditableCell({ value, onCommit }) {
@@ -161,18 +161,20 @@ export default function AportesRicardo() {
 
   const handleGerarPDF = () => {
     try {
-      gerarPDFGeral({
-        empreendimentos: pdfData.empAtivos,
-        saldos: pdfData.saldos,
-        semanas: pdfData.semanas,
-        lancamentos: pdfData.lancamentos,
-        allProjetos: pdfData.allProjetos,
-        despesasProjetos: pdfData.despesasProjetos,
-        participacoes: pdfData.participacoes,
-        socios: pdfData.socios,
-        cicloAtivo: pdfData.cicloAtivo,
-        empData: pdfData.empData,
-        numSemanasContas: pdfData.numSemanasContas,
+      const pdfRows = rows.map(row => {
+        let total = 0;
+        const weekVals = semanasOrdenadas.map(s => {
+          const v = getDisplayValue(row, s.id);
+          total += v;
+          return v;
+        });
+        return [row.label, ...weekVals, total];
+      });
+      gerarPDFAportesRicardo({
+        semanas: semanasOrdenadas,
+        rows: pdfRows,
+        getDisplayValue,
+        cicloAtivo,
       });
     } catch (error) {
       console.error(error);
@@ -205,7 +207,7 @@ export default function AportesRicardo() {
         </div>
         <Button variant="outline" onClick={handleGerarPDF} className="gap-2 text-[15px]">
           <FileDown className="w-4 h-4" />
-          Gerar PDF Geral
+          Gerar PDF
         </Button>
       </div>
 

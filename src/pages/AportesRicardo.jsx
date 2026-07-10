@@ -170,10 +170,18 @@ export default function AportesRicardo() {
         });
         return [row.label, ...weekVals, total];
       });
+      const totalRow = ['TOTAL'];
+      let grand = 0;
+      semanasOrdenadas.forEach(s => {
+        const t = rows.reduce((sum, r) => sum + getDisplayValue(r, s.id), 0);
+        grand += t;
+        totalRow.push(t);
+      });
+      totalRow.push(grand);
       gerarPDFAportesRicardo({
         semanas: semanasOrdenadas,
         rows: pdfRows,
-        getDisplayValue,
+        totalRow,
         cicloAtivo,
       });
     } catch (error) {

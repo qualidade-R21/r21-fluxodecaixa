@@ -72,7 +72,7 @@ function buildSubtitulo(cicloAtivo, semanas) {
   return `${cicloAtivo.nome}${range}`;
 }
 
-export function gerarPDFAportesRicardo({ semanas, rows, getDisplayValue, cicloAtivo }) {
+export function gerarPDFAportesRicardo({ semanas, rows, totalRow, cicloAtivo }) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: false });
   const geradoEm = nowStr();
   const subtitulo = buildSubtitulo(cicloAtivo, semanas);
@@ -146,15 +146,6 @@ export function gerarPDFAportesRicardo({ semanas, rows, getDisplayValue, cicloAt
 
   // Total row
   {
-    const totalRow = ['TOTAL'];
-    let grand = 0;
-    semanas.forEach(s => {
-      const t = rows.reduce((sum, r) => sum + getDisplayValue(r, s.id), 0);
-      grand += t;
-      totalRow.push(t);
-    });
-    totalRow.push(grand);
-
     doc.setFillColor(...BLACK);
     doc.rect(ML, y, CW, ROW_H, 'F');
     sf(doc, true, 6.5);

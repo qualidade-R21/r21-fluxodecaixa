@@ -435,8 +435,11 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
   const empParts = participacoes.filter(p => p.empreendimento_id === emp.id);
   if ((emp.tipo_fluxo === 'com_aportes' || emp.tipo_fluxo === 'multi_projetos') && empParts.length > 0) {
     const equalizacao = calcEqualizacao(empParts, aporteNecessario, emp, socios);
-    const eqComFator = calcFatorRateio(equalizacao, aporteNecessario);
-
+    const eqComFator = [...calcFatorRateio(equalizacao, aporteNecessario)].sort((a, b) => {
+      const nomeA = (socios.find(s => s.id === a.socio_id)?.nome || '').toLowerCase();
+      const nomeB = (socios.find(s => s.id === b.socio_id)?.nome || '').toLowerCase();
+      return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
 
     y = drawSectionTitle(doc, y, 'Resumo Valores Aportados (Equalização)');
     const eqHeads = ['Sócio', '% Soc.', 'Aportado', 'Devolvido', 'Saldo Dev.', '% Atual', 'Total Eq.', 'Aporte Nec.'];

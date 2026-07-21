@@ -402,7 +402,6 @@ function drawEmpSection(doc, y, { emp, saldoEmp, semanas, lancamentos, projetos,
     } else {
       cols.push({ key: 'despesa_consolidada', label: 'Desp. Cons.' });
       cols.push({ key: 'despesa_prevista', label: 'Desp. Prev.' });
-      if (emp.tipo_fluxo === 'com_aportes') cols.push({ key: 'despesa_afac', label: 'Prev. Afac' });
     }
     if (emp.tem_receita !== false) {
       cols.push({ key: 'receita_consolidada', label: 'Rec. Cons.' });
